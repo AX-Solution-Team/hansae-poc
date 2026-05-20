@@ -1222,20 +1222,56 @@ function BiDashboard({ config }: { config: AgentConfig }) {
    ================================================================= */
 
 function FabricCostDashboard({ config }: { config: AgentConfig }) {
+  const FABRIC_TYPES = ["Single Jersey", "Rib 1x1", "Interlock", "Pique", "French Terry"] as const
+  const ORIGINS = ["Vietnam", "Cambodia", "Indonesia"] as const
+  const [selectedFabric, setSelectedFabric] = useState(0)
+  const [selectedOrigin, setSelectedOrigin] = useState(0)
+  const [isCalculating, setIsCalculating] = useState(false)
+
+  const COST_DB: Record<string, Record<string, { yarn: number; knit: number; dye: number; inspect: number }>> = {
+    "Single Jersey": { Vietnam: { yarn: 2.45, knit: 0.65, dye: 1.10, inspect: 0.18 }, Cambodia: { yarn: 2.25, knit: 0.60, dye: 1.01, inspect: 0.17 }, Indonesia: { yarn: 2.57, knit: 0.68, dye: 1.16, inspect: 0.19 } },
+    "Rib 1x1": { Vietnam: { yarn: 2.60, knit: 0.75, dye: 1.15, inspect: 0.18 }, Cambodia: { yarn: 2.39, knit: 0.69, dye: 1.06, inspect: 0.17 }, Indonesia: { yarn: 2.73, knit: 0.79, dye: 1.21, inspect: 0.19 } },
+    "Interlock": { Vietnam: { yarn: 2.80, knit: 0.85, dye: 1.20, inspect: 0.20 }, Cambodia: { yarn: 2.58, knit: 0.78, dye: 1.10, inspect: 0.18 }, Indonesia: { yarn: 2.94, knit: 0.89, dye: 1.26, inspect: 0.21 } },
+    "Pique": { Vietnam: { yarn: 2.70, knit: 0.80, dye: 1.18, inspect: 0.19 }, Cambodia: { yarn: 2.48, knit: 0.74, dye: 1.09, inspect: 0.17 }, Indonesia: { yarn: 2.84, knit: 0.84, dye: 1.24, inspect: 0.20 } },
+    "French Terry": { Vietnam: { yarn: 3.10, knit: 0.90, dye: 1.25, inspect: 0.20 }, Cambodia: { yarn: 2.85, knit: 0.83, dye: 1.15, inspect: 0.18 }, Indonesia: { yarn: 3.26, knit: 0.95, dye: 1.31, inspect: 0.21 } },
+  }
+
+  const fabric = FABRIC_TYPES[selectedFabric]
+  const origin = ORIGINS[selectedOrigin]
+  const c = COST_DB[fabric][origin]
+  const loss = Number((c.yarn * 0.05).toFixed(2))
   const costItems = [
-    { item: "Yarn Cost", detail: "Cotton 30s + Span 20D", cost: 2.45 },
-    { item: "Knitting", detail: "Circular Knit (Standard)", cost: 0.65 },
-    { item: "Dyeing/Finishing", detail: "Solid Dyeing + Softener", cost: 1.10 },
-    { item: "Loss/Others", detail: "Wastage 5% included", cost: 0.21 },
+    { item: "Yarn Cost", detail: `Cotton 30s + Span 20D`, cost: c.yarn },
+    { item: "Knitting", detail: `Circular Knit`, cost: c.knit },
+    { item: "Dyeing/Finishing", detail: `Solid Dyeing + Softener`, cost: c.dye },
+    { item: "Inspection/Packing", detail: `AQL 2.5 + Polybag`, cost: c.inspect },
+    { item: "Loss (5%)", detail: `Wastage included`, cost: loss },
   ]
-  const totalCost = costItems.reduce((s, c) => s + c.cost, 0)
+  const totalCost = costItems.reduce((s, ci) => s + ci.cost, 0)
+
+  const compareData = ORIGINS.map((o) => {
+    const oc = COST_DB[fabric][o]
+    return { origin: o, Yarn: oc.yarn, Knitting: oc.knit, Dyeing: oc.dye, Total: Number((oc.yarn + oc.knit + oc.dye + oc.inspect + oc.yarn * 0.05).toFixed(2)) }
+  })
+
+  const yarnTrend = [
+    { week: "W15", cotton: 2.32, poly: 1.85 }, { week: "W16", cotton: 2.38, poly: 1.82 },
+    { week: "W17", cotton: 2.41, poly: 1.88 }, { week: "W18", cotton: 2.45, poly: 1.90 },
+    { week: "W19", cotton: 2.50, poly: 1.87 }, { week: "W20", cotton: 2.53, poly: 1.92 },
+  ]
+
+  const handleFabricChange = (idx: number) => {
+    setIsCalculating(true)
+    setSelectedFabric(idx)
+    setTimeout(() => setIsCalculating(false), 400)
+  }
 
   return (
     <>
       <KpiGrid items={[
         { label: "Estimated Cost", value: `$${totalCost.toFixed(2)}/yd`, icon: DollarSign },
         { label: "Yarn Index", value: "Cotton +2.3%", change: "+2.3% 전주 대비", positive: false, icon: TrendingUp },
-        { label: "계산 정확도", value: "±1%", icon: Activity },
+        { label: "최저 소싱처", value: "Cambodia", icon: Activity },
         { label: "환율", value: "1,350 KRW/USD", icon: BarChart3 },
       ]} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1243,60 +1279,95 @@ function FabricCostDashboard({ config }: { config: AgentConfig }) {
           <CardContent className="p-5">
             <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Input Specs</h3>
             <div className="space-y-3">
-              {[
-                { label: "Fabric Type", value: "Single Jersey" },
-                { label: "Composition", value: "Cotton 95% / Span 5%" },
-                { label: "Weight (GSM)", value: "180" },
-                { label: "Width (Inch)", value: "60" },
-                { label: "Dyeing Method", value: "Reactive Dyeing" },
-              ].map((f) => (
-                <div key={f.label}>
-                  <p className="text-[10px] text-gray-400 font-medium mb-1">{f.label}</p>
-                  <div className="px-3 py-2 rounded bg-gray-50 border border-gray-200 text-sm text-gray-800">{f.value}</div>
+              <div>
+                <p className="text-[10px] text-gray-400 font-medium mb-1.5">Fabric Type</p>
+                <div className="space-y-1.5">
+                  {FABRIC_TYPES.map((ft, i) => (
+                    <button key={ft} onClick={() => handleFabricChange(i)} className={cn("w-full text-left px-3 py-2 rounded-lg text-sm transition-all", i === selectedFabric ? "bg-hansae-navy text-white font-bold" : "bg-gray-50 border border-gray-200 text-gray-700 hover:bg-gray-100")}>{ft}</button>
+                  ))}
                 </div>
-              ))}
+              </div>
+              <div>
+                <p className="text-[10px] text-gray-400 font-medium mb-1.5">Sourcing Origin</p>
+                <div className="flex gap-1.5">
+                  {ORIGINS.map((o, i) => (
+                    <button key={o} onClick={() => { setIsCalculating(true); setSelectedOrigin(i); setTimeout(() => setIsCalculating(false), 400) }} className={cn("flex-1 py-2 rounded-lg text-xs font-medium transition-all", i === selectedOrigin ? "bg-red-500 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200")}>{o}</button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                {[{ label: "GSM", value: "180" }, { label: "Width", value: "60\"" }, { label: "Composition", value: "CVC 95/5" }, { label: "Dyeing", value: "Reactive" }].map((f) => (
+                  <div key={f.label} className="px-2 py-1.5 rounded bg-gray-50 border border-gray-200">
+                    <p className="text-[9px] text-gray-400">{f.label}</p>
+                    <p className="text-xs font-medium text-gray-800">{f.value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm lg:col-span-2">
+        <Card className={cn("border-0 shadow-sm lg:col-span-2 transition-opacity duration-300", isCalculating && "opacity-50")}>
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Cost Breakdown (USD/yd)</h3>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900">Cost Breakdown — {fabric} ({origin})</h3>
+              {isCalculating && <Loader2 className="w-4 h-4 animate-spin text-hansae-navy" />}
+            </div>
             <table className="w-full text-sm mb-4">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 text-xs text-gray-500 font-medium">항목</th>
-                  <th className="text-left py-2 text-xs text-gray-500 font-medium">상세 내역</th>
-                  <th className="text-right py-2 text-xs text-gray-500 font-medium">단가</th>
-                </tr>
-              </thead>
+              <thead><tr className="border-b border-gray-200"><th className="text-left py-2 text-xs text-gray-500 font-medium">항목</th><th className="text-left py-2 text-xs text-gray-500 font-medium">상세</th><th className="text-right py-2 text-xs text-gray-500 font-medium">USD/yd</th><th className="text-right py-2 text-xs text-gray-500 font-medium">비중</th></tr></thead>
               <tbody>
-                {costItems.map((c) => (
-                  <tr key={c.item} className="border-b border-gray-50">
-                    <td className="py-3 font-medium text-gray-900">{c.item}</td>
-                    <td className="py-3 text-gray-600">{c.detail}</td>
-                    <td className="py-3 text-right font-medium text-gray-900">${c.cost.toFixed(2)}</td>
+                {costItems.map((ci) => (
+                  <tr key={ci.item} className="border-b border-gray-50">
+                    <td className="py-2.5 font-medium text-gray-900">{ci.item}</td>
+                    <td className="py-2.5 text-gray-500 text-xs">{ci.detail}</td>
+                    <td className="py-2.5 text-right font-bold text-gray-900">${ci.cost.toFixed(2)}</td>
+                    <td className="py-2.5 text-right text-xs text-gray-400">{((ci.cost / totalCost) * 100).toFixed(0)}%</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-
-            <Card className="border-0 bg-gray-50">
-              <CardContent className="p-4 flex items-start gap-3">
-                <div className="w-7 h-7 rounded bg-blue-100 flex items-center justify-center flex-shrink-0 text-sm">💡</div>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  베트남 공장 소싱 시 물류비 절감으로 전체 단가 <strong>$0.15</strong> 추가 인하 가능합니다.
-                </p>
-              </CardContent>
-            </Card>
-
-            <div className="mt-4 p-4 rounded-xl bg-hansae-navy flex items-center justify-between">
-              <span className="text-sm font-semibold text-gray-100">Estimated Total Cost</span>
+            <div className="p-4 rounded-xl bg-hansae-navy flex items-center justify-between mb-4">
+              <span className="text-sm font-semibold text-gray-100">Total Estimated Cost</span>
               <span className="text-2xl font-black text-red-400">${totalCost.toFixed(2)} / yd</span>
+            </div>
+
+            <h4 className="text-xs font-bold text-gray-700 mb-3">Origin Comparison — {fabric}</h4>
+            <div className="h-[180px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={compareData} barCategoryGap="20%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="origin" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 10 }} domain={[0, 'auto']} />
+                  <Tooltip contentStyle={TT} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Bar dataKey="Yarn" fill="#1E3A5F" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="Knitting" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="Dyeing" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="text-sm font-bold text-gray-900 mb-4">Yarn Price Trend (6 Weeks)</h3>
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={yarnTrend}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="week" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
+                <Tooltip contentStyle={TT} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
+                <Line type="monotone" dataKey="cotton" stroke="#1E3A5F" strokeWidth={2} name="Cotton 30s" dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="poly" stroke="#EF4444" strokeWidth={2} name="Polyester" dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
       <OutputFile name={config.outputFile} size={config.outputSize} />
     </>
   )
@@ -1307,59 +1378,135 @@ function FabricCostDashboard({ config }: { config: AgentConfig }) {
    ================================================================= */
 
 function TechPackDashboard({ config }: { config: AgentConfig }) {
-  const bomItems = [
-    { label: "Main Fabric", value: "100% Cotton Jersey" },
-    { label: "Color Way", value: "Navy, Heather Gray, White" },
-    { label: "Trim: Zipper", value: "YKK 5# Nylon Reverse" },
-    { label: "Thread", value: "60/3 Spun Polyester" },
-    { label: "Stitch Type", value: "301 Lockstitch" },
-    { label: "Label", value: "Woven Main + Care Label" },
-    { label: "Packaging", value: "Polybag + Carton Box" },
+  const PAGES = [
+    { page: 1, section: "Cover", icon: "📋" },
+    { page: 2, section: "Flat Sketch", icon: "✏️" },
+    { page: 3, section: "Fabric Spec", icon: "🧵" },
+    { page: 4, section: "Color Way", icon: "🎨" },
+    { page: 5, section: "Trim Detail", icon: "🔩" },
+    { page: 6, section: "Stitch Spec", icon: "🪡" },
+    { page: 7, section: "Label & Packaging", icon: "🏷️" },
+    { page: 8, section: "Measurement", icon: "📐" },
   ]
+  const BOM_ITEMS = [
+    { category: "Shell Fabric", item: "100% Cotton Jersey", spec: "180GSM, 60\"", supplier: "Texhong Vietnam", unitCost: 3.20, confidence: 99.1, page: 3 },
+    { category: "Lining", item: "100% Polyester Taffeta", spec: "58GSM, 58\"", supplier: "Youngone", unitCost: 1.15, confidence: 97.8, page: 3 },
+    { category: "Zipper", item: "YKK 5# Nylon Reverse", spec: "22cm", supplier: "YKK Vietnam", unitCost: 0.45, confidence: 98.5, page: 5 },
+    { category: "Thread", item: "60/3 Spun Polyester", spec: "Color-matched", supplier: "Coats", unitCost: 0.08, confidence: 96.2, page: 6 },
+    { category: "Button", item: "4-Hole Poly Button", spec: "20L, Navy", supplier: "HK Button", unitCost: 0.03, confidence: 95.0, page: 5 },
+    { category: "Label", item: "Woven Main + Care", spec: "30x60mm", supplier: "Paxar", unitCost: 0.12, confidence: 99.5, page: 7 },
+    { category: "Interlining", item: "Woven Fusible", spec: "90GSM", supplier: "Freudenberg", unitCost: 0.35, confidence: 97.3, page: 3 },
+    { category: "Packaging", item: "Polybag + Carton", spec: "12\"x16\"", supplier: "Local", unitCost: 0.22, confidence: 98.0, page: 7 },
+  ]
+
+  const [currentPage, setCurrentPage] = useState(0)
+  const [extractedCount, setExtractedCount] = useState(BOM_ITEMS.length)
+  const [selectedBom, setSelectedBom] = useState<number | null>(null)
+
+  const currentBoms = BOM_ITEMS.filter((b) => b.page === PAGES[currentPage].page)
+  const avgConf = (BOM_ITEMS.reduce((s, b) => s + b.confidence, 0) / BOM_ITEMS.length).toFixed(1)
+  const totalBomCost = BOM_ITEMS.reduce((s, b) => s + b.unitCost, 0)
+
+  const confChartData = BOM_ITEMS.map((b) => ({ name: b.category, confidence: b.confidence, cost: b.unitCost }))
 
   return (
     <>
       <KpiGrid items={[
-        { label: "분석 페이지", value: "12p", icon: FileText },
-        { label: "추출 항목", value: `${bomItems.length}개`, icon: Package },
-        { label: "Confidence", value: "98.5%", icon: Activity },
-        { label: "바이어", value: "GAP / Old Navy", icon: Layers },
+        { label: "분석 페이지", value: `${PAGES.length}p`, icon: FileText },
+        { label: "추출 항목", value: `${extractedCount}개`, icon: Package },
+        { label: "Avg. Confidence", value: `${avgConf}%`, icon: Activity },
+        { label: "총 BOM 원가", value: `$${totalBomCost.toFixed(2)}`, icon: DollarSign },
       ]} />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm">
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Original Document</h3>
-            <div className="relative rounded-lg bg-gray-100 border border-gray-200 h-[320px] flex items-center justify-center overflow-hidden">
-              <span className="text-6xl">👕</span>
-              <div className="absolute top-3 right-3 text-[10px] bg-white/80 px-2 py-1 rounded">Page 1 / 12</div>
-              <div className="absolute left-0 w-full h-0.5 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse" style={{ top: "40%" }} />
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900">Original Document</h3>
+              <span className="text-[10px] bg-gray-100 px-2 py-1 rounded font-medium">Page {PAGES[currentPage].page} / {PAGES.length}</span>
+            </div>
+            <div className="relative rounded-lg bg-gray-50 border border-gray-200 h-[280px] flex flex-col items-center justify-center overflow-hidden">
+              <span className="text-5xl mb-2">{PAGES[currentPage].icon}</span>
+              <p className="text-sm font-bold text-gray-700">{PAGES[currentPage].section}</p>
+              <p className="text-[10px] text-gray-400 mt-1">GAP / Old Navy — Style #ON-FW26-0042</p>
+              {currentBoms.length > 0 && (
+                <div className="absolute inset-3 border-2 border-red-500 rounded opacity-30 animate-pulse" />
+              )}
+              {currentBoms.length > 0 && (
+                <div className="absolute bottom-3 left-3 bg-red-500 text-white text-[10px] px-2 py-1 rounded font-bold">
+                  {currentBoms.length} items detected on this page
+                </div>
+              )}
+            </div>
+            <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
+              {PAGES.map((p, i) => (
+                <button key={p.page} onClick={() => setCurrentPage(i)} className={cn("flex-shrink-0 w-16 h-16 rounded-lg border text-center flex flex-col items-center justify-center gap-0.5 transition-all", i === currentPage ? "border-red-500 bg-red-50" : "border-gray-200 hover:bg-gray-50")}>
+                  <span className="text-lg">{p.icon}</span>
+                  <span className="text-[8px] text-gray-500 leading-tight">{p.section}</span>
+                </button>
+              ))}
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Extracted BOM & Specs</h3>
-            <div className="space-y-2.5">
-              {bomItems.map((item) => (
-                <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border-l-[3px] border-red-500">
-                  <span className="text-xs text-gray-500 font-medium">{item.label}</span>
-                  <span className="text-sm font-bold text-gray-900">{item.value}</span>
-                </div>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900">Extracted BOM & Specs</h3>
+              <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200" variant="outline">
+                <CheckCircle2 className="w-3 h-3 mr-1" /> {extractedCount} items
+              </Badge>
+            </div>
+            <div className="space-y-2 max-h-[260px] overflow-y-auto">
+              {BOM_ITEMS.map((item, i) => (
+                <button key={item.category} onClick={() => setSelectedBom(selectedBom === i ? null : i)} className={cn("w-full text-left flex items-center justify-between p-2.5 rounded-lg border-l-[3px] transition-all", selectedBom === i ? "bg-blue-50 border-blue-500" : "bg-gray-50 border-red-500 hover:bg-gray-100")}>
+                  <div className="min-w-0">
+                    <span className="text-[10px] text-gray-400">{item.category}</span>
+                    <p className="text-xs font-bold text-gray-900 truncate">{item.item}</p>
+                    {selectedBom === i && (
+                      <div className="mt-1.5 space-y-0.5 text-[10px] text-gray-500 animate-fade-in">
+                        <p>Spec: {item.spec} | Supplier: {item.supplier}</p>
+                        <p>Unit Cost: <strong className="text-gray-800">${item.unitCost.toFixed(2)}</strong> | Page {item.page}</p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-shrink-0 ml-2 text-right">
+                    <div className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded", item.confidence >= 98 ? "bg-emerald-100 text-emerald-700" : item.confidence >= 96 ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700")}>{item.confidence}%</div>
+                  </div>
+                </button>
               ))}
             </div>
 
-            <Card className="border-0 bg-blue-50 mt-4">
-              <CardContent className="p-4 flex items-start gap-3">
-                <div className="w-7 h-7 rounded bg-blue-500 flex items-center justify-center flex-shrink-0 text-sm text-white">🔍</div>
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  BOM 내 <strong>&apos;YKK Zipper&apos;</strong> 사양이 이전 시즌 대비 15% 단가 상승되었습니다. 대체 부자재 확인이 필요합니다.
+            <Card className="border-0 bg-amber-50 mt-3">
+              <CardContent className="p-3 flex items-start gap-2">
+                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-800 leading-relaxed">
+                  <strong>YKK Zipper</strong> 단가가 전 시즌 대비 <strong>+15%</strong> 상승. 대체 부자재(SBS Zipper $0.32) 검토를 권장합니다.
                 </p>
               </CardContent>
             </Card>
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-0 shadow-sm">
+        <CardContent className="p-5">
+          <h3 className="text-sm font-bold text-gray-900 mb-4">BOM Confidence & Cost Analysis</h3>
+          <div className="h-[200px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={confChartData} barCategoryGap="15%">
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="name" tick={{ fontSize: 9 }} />
+                <YAxis yAxisId="left" domain={[90, 100]} tick={{ fontSize: 10 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                <Tooltip contentStyle={TT} />
+                <Legend wrapperStyle={{ fontSize: 10 }} />
+                <Bar yAxisId="left" dataKey="confidence" fill="#1E3A5F" name="Confidence %" radius={[3, 3, 0, 0]} />
+                <Bar yAxisId="right" dataKey="cost" fill="#EF4444" name="Unit Cost $" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
       <OutputFile name={config.outputFile} size={config.outputSize} />
     </>
   )
@@ -1370,69 +1517,143 @@ function TechPackDashboard({ config }: { config: AgentConfig }) {
    ================================================================= */
 
 function BuyerEmailDashboard({ config }: { config: AgentConfig }) {
-  const emails = [
-    { subject: "Urgent: Shipment Delay for PO #829103", from: "Target Buyer", time: "10:30 AM", active: true },
-    { subject: "Sample Approval Request - Style TS-102", from: "Gap Sourcing", time: "09:15 AM", active: false },
-    { subject: "Quarterly Business Review Invitation", from: "Walmart Global", time: "Yesterday", active: false },
+  const EMAILS = [
+    {
+      id: 0, subject: "Urgent: Shipment Delay for PO #829103", from: "Sarah Jenkins", company: "Target", time: "10:30 AM", priority: "HIGH" as const,
+      body: "Dear Hansae Team,\n\nWe noticed that the shipment for PO #829103 is currently marked as delayed in the portal. Could you please provide an updated ETD and the reason for this delay? This is a priority style for our upcoming summer campaign.\n\nBest regards,\nSarah",
+      category: "Delivery Inquiry", erpData: "PO-829103 | ETD: 2026-05-25 | Status: In Production (92%)",
+      drafts: {
+        Professional: "Dear Sarah,\n\nThank you for your inquiry. Regarding PO #829103, the ETD has been updated to May 25th due to a temporary raw material shortage which has now been resolved. Current production progress is at 92%, and we are fast-tracking to ensure minimal impact on your campaign timeline.\n\nWe will provide daily status updates until shipment confirmation.\n\nBest regards,\nHansae Sales Team",
+        Friendly: "Hi Sarah,\n\nThanks for reaching out! Good news — PO #829103 is now at 92% completion and we've locked in the May 25th ETD. The brief delay was due to a raw material issue that's already been sorted out.\n\nI'll keep you posted with daily updates. Let me know if you need anything else!\n\nBest,\nHansae Sales Team",
+        Urgent: "Dear Sarah,\n\nRe: PO #829103 — Immediate update:\n\n• Current status: In Production (92% complete)\n• Revised ETD: May 25, 2026\n• Root cause: Raw material delay (RESOLVED)\n• Action: Fast-track production in progress\n\nDaily status reports will follow. Please contact us immediately if this timeline impacts your campaign.\n\nRegards,\nHansae Sales Team",
+      },
+    },
+    {
+      id: 1, subject: "Sample Approval Request - Style TS-102", from: "Michael Chen", company: "Gap", time: "09:15 AM", priority: "MEDIUM" as const,
+      body: "Hi Team,\n\nWe've reviewed the pre-production samples for Style TS-102. The fit looks good but we need the following adjustments before final approval:\n1. Sleeve length +0.5cm\n2. Neck opening needs to be adjusted\n3. Please provide updated measurement chart\n\nPlease confirm the timeline for revised samples.\n\nRegards,\nMichael",
+      category: "Sample Request", erpData: "SAMPLE-TS102 | Stage: PP Sample | QC: Pending Revision",
+      drafts: {
+        Professional: "Dear Michael,\n\nThank you for the detailed feedback on Style TS-102. We acknowledge the three adjustments required:\n\n1. Sleeve length: Will extend +0.5cm across all sizes\n2. Neck opening: Our pattern team will adjust per your spec\n3. Updated measurement chart: Will be included with revised samples\n\nRevised samples will ship within 5 business days. Updated measurement chart attached.\n\nBest regards,\nHansae Sales Team",
+        Friendly: "Hi Michael,\n\nThanks for the feedback on TS-102! We're on it — all three changes are noted and our pattern team is already working on the revisions.\n\nExpect the updated samples in about 5 days. We'll include the new measurement chart with the shipment.\n\nCheers,\nHansae Sales Team",
+        Urgent: "Dear Michael,\n\nRe: Style TS-102 Sample Revision — Confirmed.\n\n• Sleeve length +0.5cm: ACCEPTED\n• Neck opening adjustment: IN PROGRESS\n• Measurement chart: WILL ATTACH\n• Revised sample ETA: 5 business days\n\nPrioritizing to meet your approval deadline.\n\nRegards,\nHansae Sales Team",
+      },
+    },
+    {
+      id: 2, subject: "Price Negotiation for FW26 Bulk Order", from: "Emma Williams", company: "Walmart", time: "Yesterday", priority: "HIGH" as const,
+      body: "Dear Hansae Team,\n\nFollowing our QBR discussion, we'd like to proceed with the FW26 bulk order. However, we need a 5% price reduction on the following styles to meet our margin targets:\n- WM-FW26-001 (Fleece Hoodie)\n- WM-FW26-002 (Quilted Jacket)\n- WM-FW26-003 (Thermal Pant)\n\nCurrent volume commitment: 150,000 pcs. Open to increasing to 200,000 pcs if pricing is competitive.\n\nPlease advise.\n\nEmma Williams\nWalmart Global Sourcing",
+      category: "Price Negotiation", erpData: "QUOTE-FW26-WM | Volume: 150K–200K pcs | Current margin: 18.5%",
+      drafts: {
+        Professional: "Dear Emma,\n\nThank you for your interest in proceeding with the FW26 order. We've carefully reviewed the pricing request:\n\n• At 150,000 pcs: We can offer a 3% reduction, bringing our margin to a sustainable level\n• At 200,000 pcs: We can meet your 5% target, leveraging fabric volume discounts\n\nThis proposal maintains quality standards while meeting your margin requirements. Detailed cost breakdown is attached.\n\nWould you like to schedule a call to discuss?\n\nBest regards,\nHansae Sales Team",
+        Friendly: "Hi Emma,\n\nGreat to hear you want to move forward with FW26! We've run the numbers and here's what we can do:\n\n• 150K pcs → 3% off (our best at this volume)\n• 200K pcs → Full 5% off (the volume makes it work!)\n\nThe quality stays the same either way. Happy to jump on a call to work out the details!\n\nBest,\nHansae Sales Team",
+        Urgent: "Dear Emma,\n\nRe: FW26 Pricing — Proposal:\n\n• 150,000 pcs → 3% reduction (maximum at this volume)\n• 200,000 pcs → 5% reduction (ACCEPTED with volume commitment)\n• Condition: Fabric booking by June 15\n\nDetailed cost breakdown attached. Request call to finalize.\n\nRegards,\nHansae Sales Team",
+      },
+    },
   ]
+
+  const TONES = ["Professional", "Friendly", "Urgent"] as const
+  const [selectedEmail, setSelectedEmail] = useState(0)
+  const [selectedTone, setSelectedTone] = useState<typeof TONES[number]>("Professional")
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [displayedDraft, setDisplayedDraft] = useState(EMAILS[0].drafts.Professional)
+  const [charCount, setCharCount] = useState(EMAILS[0].drafts.Professional.length)
+
+  const email = EMAILS[selectedEmail]
+  const fullDraft = email.drafts[selectedTone]
+
+  const handleEmailChange = (idx: number) => {
+    setSelectedEmail(idx)
+    setIsGenerating(true)
+    setDisplayedDraft("")
+    setCharCount(0)
+  }
+
+  const handleToneChange = (tone: typeof TONES[number]) => {
+    setSelectedTone(tone)
+    setIsGenerating(true)
+    setDisplayedDraft("")
+    setCharCount(0)
+  }
+
+  useEffect(() => {
+    if (!isGenerating) return
+    const draft = EMAILS[selectedEmail].drafts[selectedTone]
+    if (charCount >= draft.length) {
+      setIsGenerating(false)
+      return
+    }
+    const speed = charCount < 20 ? 30 : 8
+    const timer = setTimeout(() => {
+      const next = Math.min(charCount + 3, draft.length)
+      setDisplayedDraft(draft.slice(0, next))
+      setCharCount(next)
+    }, speed)
+    return () => clearTimeout(timer)
+  }, [isGenerating, charCount, selectedEmail, selectedTone])
 
   return (
     <>
       <KpiGrid items={[
         { label: "미처리 메일", value: "12건", icon: FileText },
-        { label: "AI 답변 생성", value: "3건", icon: Activity },
-        { label: "평균 응답시간", value: "1.2s", icon: BarChart3 },
+        { label: "AI 답변 생성", value: `${EMAILS.length}건`, icon: Activity },
+        { label: "평균 응답시간", value: "1.2s", icon: Clock },
         { label: "언어 지원", value: "EN/KO/CN", icon: Layers },
       ]} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Email list */}
         <Card className="border-0 shadow-sm">
           <CardContent className="p-0">
             <div className="px-4 py-3 border-b border-gray-100">
               <h3 className="text-sm font-bold text-gray-900">Inbox (12)</h3>
             </div>
             <div className="divide-y divide-gray-100">
-              {emails.map((e) => (
-                <div key={e.subject} className={cn("px-4 py-3 cursor-pointer hover:bg-gray-50", e.active && "bg-gray-50 border-l-[3px] border-red-500")}>
-                  <p className="text-sm font-bold text-gray-900 mb-1 truncate">{e.subject}</p>
+              {EMAILS.map((e, i) => (
+                <button key={e.id} onClick={() => handleEmailChange(i)} className={cn("w-full text-left px-4 py-3 transition-all hover:bg-gray-50", i === selectedEmail && "bg-gray-50 border-l-[3px] border-red-500")}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge className={cn("text-[8px] h-4 px-1", e.priority === "HIGH" ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700")} variant="secondary">{e.priority}</Badge>
+                    <p className="text-sm font-bold text-gray-900 truncate flex-1">{e.subject}</p>
+                  </div>
                   <div className="flex items-center justify-between text-[10px] text-gray-400">
-                    <span>{e.from}</span>
+                    <span>{e.from} ({e.company})</span>
                     <span>{e.time}</span>
                   </div>
-                </div>
+                  <Badge className="mt-1 text-[8px] bg-gray-100 text-gray-600" variant="secondary">{e.category}</Badge>
+                </button>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Email content + AI draft */}
         <Card className="border-0 shadow-sm lg:col-span-2">
           <CardContent className="p-0">
             <div className="px-5 py-4 border-b border-gray-100">
-              <h3 className="text-base font-bold text-gray-900 mb-1">Urgent: Shipment Delay for PO #829103</h3>
-              <p className="text-xs text-gray-500">From: <strong>Sarah Jenkins (Target)</strong> | To: <strong>Hansae Sales Team</strong></p>
+              <h3 className="text-base font-bold text-gray-900 mb-1">{email.subject}</h3>
+              <p className="text-xs text-gray-500">From: <strong>{email.from} ({email.company})</strong> | To: <strong>Hansae Sales Team</strong></p>
             </div>
-            <div className="px-5 py-4 text-sm text-gray-700 leading-relaxed border-b border-gray-100">
-              <p>Dear Hansae Team,</p>
-              <br />
-              <p>We noticed that the shipment for PO #829103 is currently marked as delayed in the portal. Could you please provide an updated ETD and the reason for this delay? This is a priority style for our upcoming summer campaign.</p>
-              <br />
-              <p>Best regards,<br />Sarah</p>
+            <div className="px-5 py-4 text-sm text-gray-700 leading-relaxed border-b border-gray-100 whitespace-pre-line max-h-[160px] overflow-y-auto">{email.body}</div>
+
+            <div className="px-5 py-2 bg-blue-50 border-b border-blue-100 flex items-center gap-2">
+              <Eye className="w-3.5 h-3.5 text-blue-600" />
+              <span className="text-[10px] text-blue-700 font-medium">ERP Lookup: {email.erpData}</span>
             </div>
 
             <div className="m-5 p-5 rounded-xl bg-gray-50 border border-red-200">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-bold text-red-600 flex items-center gap-1.5">✨ AI Generated Draft (Professional Tone)</span>
-                <Button size="sm" className="bg-hansae-navy hover:bg-hansae-navy-light text-xs h-7">Apply to Reply</Button>
+                <span className="text-sm font-bold text-red-600 flex items-center gap-1.5">✨ AI Generated Draft</span>
+                <div className="flex items-center gap-1.5">
+                  {TONES.map((tone) => (
+                    <button key={tone} onClick={() => handleToneChange(tone)} className={cn("px-2.5 py-1 rounded text-[10px] font-medium transition-all", tone === selectedTone ? "bg-hansae-navy text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-100")}>{tone}</button>
+                  ))}
+                </div>
               </div>
-              <div className="p-4 rounded-lg bg-white border border-gray-200 text-sm text-gray-800 leading-relaxed">
-                <p>Dear Sarah,</p>
-                <br />
-                <p>Thank you for your inquiry. Regarding PO #829103, the ETD has been updated to <strong>May 25th</strong> due to a temporary raw material shortage which has now been resolved. We are fast-tracking the production to ensure minimal impact on your campaign.</p>
-                <br />
-                <p>Best regards,<br />Hansae Sales Team</p>
+              <div className="p-4 rounded-lg bg-white border border-gray-200 text-sm text-gray-800 leading-relaxed whitespace-pre-line min-h-[120px]">
+                {displayedDraft}
+                {isGenerating && <span className="inline-block w-0.5 h-4 bg-hansae-navy animate-pulse ml-0.5" />}
               </div>
-              <p className="text-[10px] text-gray-400 mt-2">* ERP Data Synced: ETD 2026-05-25, Status: In Production</p>
+              <div className="flex items-center justify-between mt-3">
+                <p className="text-[10px] text-gray-400">* ERP 데이터 자동 연동 | {selectedTone} Tone</p>
+                <Button size="sm" className="bg-hansae-navy hover:bg-hansae-navy-light text-xs h-7" disabled={isGenerating}>
+                  {isGenerating ? <><Loader2 className="w-3 h-3 animate-spin mr-1" />생성 중...</> : "Apply to Reply"}
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -1447,50 +1668,88 @@ function BuyerEmailDashboard({ config }: { config: AgentConfig }) {
    ================================================================= */
 
 function ProductionOptimizerDashboard({ config }: { config: AgentConfig }) {
-  const lines = [
-    { name: "Line A-01 (T-Shirt)", target: 1200, actual: 1020, pct: 85, warning: false },
-    { name: "Line A-02 (Polo)", target: 800, actual: 360, pct: 45, warning: true, bottleneck: "Sewing Step 3" },
-    { name: "Line B-01 (Jacket)", target: 500, actual: 460, pct: 92, warning: false },
-    { name: "Line B-02 (Pants)", target: 1000, actual: 780, pct: 78, warning: false },
+  const LINES_BEFORE = [
+    { name: "A-01", product: "T-Shirt", target: 1200, actual: 1020, pct: 85, bottleneck: null },
+    { name: "A-02", product: "Polo", target: 800, actual: 360, pct: 45, bottleneck: "Sewing Step 3" },
+    { name: "B-01", product: "Jacket", target: 500, actual: 460, pct: 92, bottleneck: null },
+    { name: "B-02", product: "Pants", target: 1000, actual: 780, pct: 78, bottleneck: null },
+    { name: "C-01", product: "Dress", target: 600, actual: 540, pct: 90, bottleneck: null },
+    { name: "C-02", product: "Shorts", target: 900, actual: 612, pct: 68, bottleneck: "Cutting" },
   ]
+  const LINES_AFTER = [
+    { name: "A-01", product: "T-Shirt", target: 1200, actual: 1080, pct: 90, bottleneck: null },
+    { name: "A-02", product: "Polo", target: 800, actual: 608, pct: 76, bottleneck: null },
+    { name: "B-01", product: "Jacket", target: 500, actual: 465, pct: 93, bottleneck: null },
+    { name: "B-02", product: "Pants", target: 1000, actual: 830, pct: 83, bottleneck: null },
+    { name: "C-01", product: "Dress", target: 600, actual: 558, pct: 93, bottleneck: null },
+    { name: "C-02", product: "Shorts", target: 900, actual: 738, pct: 82, bottleneck: null },
+  ]
+
+  const HOURLY_DATA = [
+    { hour: "08:00", before: 72, after: 72 }, { hour: "09:00", before: 78, after: 82 },
+    { hour: "10:00", before: 82, after: 88 }, { hour: "11:00", before: 80, after: 90 },
+    { hour: "12:00", before: 65, after: 70 }, { hour: "13:00", before: 75, after: 85 },
+    { hour: "14:00", before: 79, after: 89 }, { hour: "15:00", before: 76, after: 88 },
+    { hour: "16:00", before: 74, after: 86 }, { hour: "17:00", before: 70, after: 84 },
+  ]
+
+  const [optimized, setOptimized] = useState(false)
+  const [animating, setAnimating] = useState(false)
+  const lines = optimized ? LINES_AFTER : LINES_BEFORE
+  const avgEff = (lines.reduce((s, l) => s + l.pct, 0) / lines.length).toFixed(1)
+  const bottleneckCount = lines.filter((l) => l.bottleneck).length
+
+  const toggleOptimize = () => {
+    setAnimating(true)
+    setTimeout(() => {
+      setOptimized(!optimized)
+      setAnimating(false)
+    }, 600)
+  }
+
+  const compareData = LINES_BEFORE.map((b, i) => ({
+    name: b.name,
+    Before: b.pct,
+    After: LINES_AFTER[i].pct,
+    delta: LINES_AFTER[i].pct - b.pct,
+  }))
 
   return (
     <>
       <KpiGrid items={[
-        { label: "가동 라인", value: "12개", icon: Factory },
-        { label: "Overall Efficiency", value: "84.5%", change: "+2.4% vs 어제", positive: true, icon: Activity },
-        { label: "병목 라인", value: "1개", icon: AlertTriangle },
-        { label: "Shift", value: "Day (08:00-17:00)", icon: Layers },
+        { label: "가동 라인", value: `${lines.length}개`, icon: Factory },
+        { label: "Overall Efficiency", value: `${avgEff}%`, change: optimized ? "+11.3% optimized" : "+2.4% vs 어제", positive: true, icon: Activity },
+        { label: "병목 라인", value: `${bottleneckCount}개`, icon: AlertTriangle },
+        { label: "Shift", value: "Day (08:00–17:00)", icon: Clock },
       ]} />
+
+      <div className="flex items-center gap-3 mb-2">
+        <Button onClick={toggleOptimize} disabled={animating} className={cn("gap-2 transition-all", optimized ? "bg-emerald-600 hover:bg-emerald-700" : "bg-hansae-navy hover:bg-hansae-navy-light")}>
+          {animating ? <Loader2 className="w-4 h-4 animate-spin" /> : optimized ? <CheckCircle2 className="w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+          {optimized ? "최적화 적용됨 (원복)" : "AI 최적화 실행"}
+        </Button>
+        {optimized && <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200" variant="outline">병목 0건 · 평균 +11.3%p 개선</Badge>}
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="border-0 shadow-sm lg:col-span-2">
+        <Card className={cn("border-0 shadow-sm lg:col-span-2 transition-opacity duration-300", animating && "opacity-40")}>
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Active Lines (12)</h3>
-            <div className="grid grid-cols-2 gap-4">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Production Lines — {optimized ? "After Optimization" : "Current Status"}</h3>
+            <div className="grid grid-cols-2 gap-3">
               {lines.map((line) => (
-                <div
-                  key={line.name}
-                  className={cn(
-                    "p-4 rounded-lg border",
-                    line.warning ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-white"
-                  )}
-                >
-                  <p className="text-sm font-bold text-gray-900 mb-2">{line.name}</p>
+                <div key={line.name} className={cn("p-3.5 rounded-lg border transition-all", line.bottleneck ? "border-amber-300 bg-amber-50" : optimized ? "border-emerald-200 bg-emerald-50/30" : "border-gray-200 bg-white")}>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-bold text-gray-900">{line.name} <span className="text-xs font-normal text-gray-500">({line.product})</span></p>
+                    <span className={cn("text-xs font-bold", line.pct >= 90 ? "text-emerald-600" : line.pct >= 70 ? "text-blue-600" : "text-amber-600")}>{line.pct}%</span>
+                  </div>
                   <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
-                    <div
-                      className={cn("h-full rounded-full", line.warning ? "bg-amber-500" : "bg-red-500")}
-                      style={{ width: `${line.pct}%` }}
-                    />
+                    <div className={cn("h-full rounded-full transition-all duration-700", line.pct >= 90 ? "bg-emerald-500" : line.pct >= 70 ? "bg-blue-500" : "bg-amber-500")} style={{ width: `${line.pct}%` }} />
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-gray-500">
                     <span>Target: {line.target.toLocaleString()}</span>
-                    <span className={cn(line.warning && "text-amber-600 font-bold")}>
-                      Actual: {line.actual.toLocaleString()}
-                    </span>
+                    <span className="font-medium">Actual: {line.actual.toLocaleString()}</span>
                   </div>
-                  {line.bottleneck && (
-                    <p className="text-[10px] text-amber-600 mt-2 font-medium">⚠️ Bottleneck: {line.bottleneck}</p>
-                  )}
+                  {line.bottleneck && <p className="text-[10px] text-amber-600 mt-1.5 font-bold">⚠️ Bottleneck: {line.bottleneck}</p>}
                 </div>
               ))}
             </div>
@@ -1499,17 +1758,65 @@ function ProductionOptimizerDashboard({ config }: { config: AgentConfig }) {
 
         <Card className="border-0 shadow-sm">
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">AI Optimization Result</h3>
-            <div className="p-4 rounded-lg bg-green-50 border border-green-200 mb-4">
-              <p className="text-xs font-bold text-green-800 mb-1">추천 조치 사항</p>
-              <p className="text-xs text-green-700 leading-relaxed">
-                Line A-02의 병목 현상 해결을 위해 <strong>Line B-02의 유휴 인력 2명</strong>을 즉시 재배치할 것을 권장합니다. 예상 효율 개선: <strong>+12%</strong>
-              </p>
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">AI Optimization</h3>
+            <div className="space-y-3 mb-4">
+              {[
+                { action: "A-02: B-02 유휴 인력 2명 재배치", impact: "+31%p", status: optimized },
+                { action: "C-02: 커팅기 1대 추가 투입", impact: "+14%p", status: optimized },
+                { action: "A-01 → C-01 로트 순서 변경", impact: "+5%p", status: optimized },
+              ].map((r) => (
+                <div key={r.action} className={cn("p-3 rounded-lg border text-xs transition-all", r.status ? "border-emerald-200 bg-emerald-50" : "border-gray-200 bg-gray-50")}>
+                  <div className="flex items-center gap-2">
+                    {r.status ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" /> : <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-300 flex-shrink-0" />}
+                    <span className="text-gray-700">{r.action}</span>
+                  </div>
+                  <p className="text-emerald-700 font-bold ml-5.5 mt-1">예상 개선: {r.impact}</p>
+                </div>
+              ))}
             </div>
-            <div className="mt-auto">
-              <p className="text-xs text-gray-500 font-medium mb-1">Overall Efficiency</p>
-              <p className="text-3xl font-black text-gray-900">84.5%</p>
-              <p className="text-xs text-emerald-600 font-semibold mt-1">▲ 2.4% from yesterday</p>
+            <div className={cn("p-4 rounded-xl text-center transition-all", optimized ? "bg-emerald-600" : "bg-hansae-navy")}>
+              <p className="text-[10px] text-gray-300 font-medium">Overall Efficiency</p>
+              <p className="text-3xl font-black text-white mt-1">{avgEff}%</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4">Hourly Efficiency Trend</h3>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={HOURLY_DATA}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="hour" tick={{ fontSize: 10 }} />
+                  <YAxis domain={[60, 100]} tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={TT} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Line type="monotone" dataKey="before" stroke="#94A3B8" strokeWidth={2} name="Before" dot={{ r: 2 }} />
+                  <Line type="monotone" dataKey="after" stroke="#10B981" strokeWidth={2} name="After Optimization" dot={{ r: 2 }} />
+                  <ReferenceLine y={85} stroke="#EF4444" strokeDasharray="3 3" label={{ value: "Target 85%", fontSize: 9, fill: "#EF4444" }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4">Before vs After Comparison</h3>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={compareData} barCategoryGap="20%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={TT} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Bar dataKey="Before" fill="#94A3B8" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="After" fill="#10B981" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </CardContent>
         </Card>
@@ -1524,77 +1831,143 @@ function ProductionOptimizerDashboard({ config }: { config: AgentConfig }) {
    ================================================================= */
 
 function QcVisionDashboard({ config }: { config: AgentConfig }) {
-  const defects = [
-    { type: "Stain (오염)", confidence: 99.2 },
-    { type: "Seam Puckering (봉제)", confidence: 96.5 },
-    { type: "Hole (구멍)", confidence: 98.8 },
-    { type: "Shading (이색)", confidence: 94.1 },
+  const DEFECTS = [
+    { id: "DEF-001", time: "14:30:05", camera: "CAM-01", type: "Stain", label: "오염", confidence: 99.2, severity: "Major" as const, lot: "LOT-A" },
+    { id: "DEF-002", time: "14:32:18", camera: "CAM-02", type: "Seam Puckering", label: "봉제 불량", confidence: 96.5, severity: "Minor" as const, lot: "LOT-A" },
+    { id: "DEF-003", time: "14:35:41", camera: "CAM-01", type: "Hole", label: "구멍", confidence: 98.8, severity: "Critical" as const, lot: "LOT-B" },
+    { id: "DEF-004", time: "14:40:12", camera: "CAM-03", type: "Shading", label: "이색", confidence: 94.1, severity: "Minor" as const, lot: "LOT-B" },
+    { id: "DEF-005", time: "14:42:55", camera: "CAM-01", type: "Stain", label: "오염", confidence: 97.6, severity: "Major" as const, lot: "LOT-C" },
+    { id: "DEF-006", time: "14:45:30", camera: "CAM-04", type: "Open Seam", label: "봉제 터짐", confidence: 95.3, severity: "Major" as const, lot: "LOT-C" },
   ]
+
+  const TIMELINE = [
+    { time: "08:00", inspected: 320, defects: 0 }, { time: "09:00", inspected: 480, defects: 1 },
+    { time: "10:00", inspected: 510, defects: 1 }, { time: "11:00", inspected: 490, defects: 2 },
+    { time: "12:00", inspected: 280, defects: 0 }, { time: "13:00", inspected: 460, defects: 1 },
+    { time: "14:00", inspected: 520, defects: 3 }, { time: "14:30", inspected: 380, defects: 4 },
+  ]
+
+  const [scanCount, setScanCount] = useState(4281)
+  const [selectedDefect, setSelectedDefect] = useState<number | null>(null)
+  const [isScanning, setIsScanning] = useState(true)
+
+  useEffect(() => {
+    if (!isScanning) return
+    const interval = setInterval(() => {
+      setScanCount((c) => c + Math.floor(Math.random() * 3) + 1)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [isScanning])
+
+  const defectRate = ((DEFECTS.length / scanCount) * 100).toFixed(2)
   const defectTypes = [
-    { name: "Stain", pct: 42, color: "bg-red-500" },
-    { name: "Seam", pct: 28, color: "bg-blue-500" },
-    { name: "Hole", pct: 15, color: "bg-emerald-500" },
-    { name: "Shading", pct: 10, color: "bg-amber-500" },
-    { name: "Others", pct: 5, color: "bg-gray-400" },
+    { name: "Stain", count: 2, pct: 33, color: "bg-red-500" },
+    { name: "Seam", count: 2, pct: 33, color: "bg-blue-500" },
+    { name: "Hole", count: 1, pct: 17, color: "bg-emerald-500" },
+    { name: "Shading", count: 1, pct: 17, color: "bg-amber-500" },
   ]
+
+  const SEV_COLOR = { Critical: "bg-red-600 text-white", Major: "bg-amber-100 text-amber-800", Minor: "bg-gray-100 text-gray-600" }
 
   return (
     <>
       <KpiGrid items={[
-        { label: "총 검사수", value: "4,281", icon: Activity },
-        { label: "불량 탐지", value: "12건 (0.28%)", icon: AlertTriangle },
+        { label: "총 검사수", value: scanCount.toLocaleString(), icon: Activity },
+        { label: "불량 탐지", value: `${DEFECTS.length}건 (${defectRate}%)`, icon: AlertTriangle },
         { label: "모델 정확도", value: "98.5%", icon: BarChart3 },
-        { label: "카메라", value: "4대 Online", icon: Layers },
+        { label: "카메라", value: "4대 Online", icon: Eye },
       ]} />
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm">
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Recent Defects Found</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {defects.map((d) => (
-                <div key={d.type} className="rounded-lg border border-gray-200 overflow-hidden">
-                  <div className="relative h-20 bg-gray-100 flex items-center justify-center text-3xl">
-                    👕
-                    <div className="absolute inset-2 border-2 border-red-500 rounded opacity-40" />
-                  </div>
-                  <div className="p-2.5">
-                    <p className="text-xs font-bold text-red-600">{d.type}</p>
-                    <p className="text-[10px] text-gray-400">Confidence: {d.confidence}%</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Defect Pattern Analysis</h3>
-            <p className="text-xs text-gray-500 mb-3">Top Defect Types</p>
-            <div className="space-y-4 mb-6">
-              {defectTypes.map((d) => (
-                <div key={d.name}>
-                  <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-gray-600">{d.name}</span>
-                    <span className="font-medium text-gray-900">{d.pct}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={cn("h-full rounded-full", d.color)} style={{ width: `${d.pct}%` }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-              <div className="flex items-start gap-2">
-                <span className="text-sm">⚠️</span>
-                <p className="text-xs text-red-700 leading-relaxed">
-                  최근 1시간 동안 <strong>&apos;오염(Stain)&apos;</strong> 불량이 급증했습니다. 원단 롤 #402의 청결 상태를 점검하십시오.
-                </p>
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900">Live Camera Feed</h3>
+              <div className="flex items-center gap-2">
+                <span className={cn("w-2 h-2 rounded-full", isScanning ? "bg-emerald-500 animate-pulse" : "bg-gray-400")} />
+                <button onClick={() => setIsScanning(!isScanning)} className="text-[10px] text-gray-500 hover:text-gray-800">{isScanning ? "Scanning..." : "Paused"}</button>
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              {["CAM-01", "CAM-02", "CAM-03", "CAM-04"].map((cam, i) => (
+                <div key={cam} className="relative rounded-lg bg-gray-900 h-[100px] flex items-center justify-center overflow-hidden">
+                  <span className="text-3xl opacity-60">👕</span>
+                  {isScanning && <div className={cn("absolute left-0 w-full h-0.5 bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.6)]")} style={{ top: `${(Date.now() / 20 + i * 25) % 100}%`, transition: "top 0.1s linear" }} />}
+                  {i < 2 && <div className="absolute inset-3 border border-red-500/40 rounded" />}
+                  <div className="absolute top-1.5 left-1.5 bg-black/60 text-green-400 text-[8px] px-1.5 py-0.5 rounded font-mono">{cam}</div>
+                  <div className="absolute bottom-1.5 right-1.5 bg-black/60 text-gray-400 text-[8px] px-1.5 py-0.5 rounded font-mono">{scanCount + i * 100}</div>
+                </div>
+              ))}
+            </div>
+
+            <h4 className="text-xs font-bold text-gray-700 mb-2">Recent Detections</h4>
+            <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
+              {DEFECTS.map((d, i) => (
+                <button key={d.id} onClick={() => setSelectedDefect(selectedDefect === i ? null : i)} className={cn("w-full text-left flex items-center gap-3 p-2 rounded-lg border transition-all text-xs", selectedDefect === i ? "bg-red-50 border-red-300" : "bg-gray-50 border-gray-200 hover:bg-gray-100")}>
+                  <span className={cn("px-1.5 py-0.5 rounded text-[9px] font-bold", SEV_COLOR[d.severity])}>{d.severity}</span>
+                  <span className="font-medium text-gray-900 flex-1">{d.type} ({d.label})</span>
+                  <span className="text-gray-400 text-[10px]">{d.camera} · {d.time}</span>
+                </button>
+              ))}
+            </div>
+            {selectedDefect !== null && (
+              <div className="mt-2 p-3 rounded-lg bg-red-50 border border-red-200 text-xs animate-fade-in">
+                <p className="font-bold text-red-800 mb-1">{DEFECTS[selectedDefect].type} — Detail</p>
+                <p className="text-red-700">Confidence: <strong>{DEFECTS[selectedDefect].confidence}%</strong> | LOT: {DEFECTS[selectedDefect].lot} | Camera: {DEFECTS[selectedDefect].camera}</p>
+                <p className="text-red-600 mt-1">Action: {DEFECTS[selectedDefect].severity === "Critical" ? "즉시 라인 정지 및 원인 조사" : DEFECTS[selectedDefect].severity === "Major" ? "해당 LOT 격리 후 재검사" : "기록 후 모니터링 지속"}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
+
+        <div className="space-y-6">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <h3 className="text-sm font-bold text-gray-900 mb-4">Defect Timeline (Today)</h3>
+              <div className="h-[180px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={TIMELINE} barCategoryGap="15%">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="time" tick={{ fontSize: 10 }} />
+                    <YAxis yAxisId="left" tick={{ fontSize: 10 }} />
+                    <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={TT} />
+                    <Legend wrapperStyle={{ fontSize: 10 }} />
+                    <Bar yAxisId="left" dataKey="inspected" fill="#E2E8F0" name="Inspected" radius={[2, 2, 0, 0]} />
+                    <Bar yAxisId="right" dataKey="defects" fill="#EF4444" name="Defects" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-5">
+              <h3 className="text-sm font-bold text-gray-900 mb-3">Defect Distribution</h3>
+              <div className="space-y-3">
+                {defectTypes.map((d) => (
+                  <div key={d.name}>
+                    <div className="flex items-center justify-between text-xs mb-1">
+                      <span className="text-gray-600">{d.name}</span>
+                      <span className="font-bold text-gray-900">{d.count}건 ({d.pct}%)</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div className={cn("h-full rounded-full transition-all duration-500", d.color)} style={{ width: `${d.pct}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-red-700 leading-relaxed">
+                    14:30 이후 <strong>Stain</strong> 불량 급증 감지. 원단 롤 #402 청결 상태 점검 및 CAM-01 라인 긴급 확인 필요.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       <OutputFile name={config.outputFile} size={config.outputSize} />
     </>
@@ -1606,77 +1979,162 @@ function QcVisionDashboard({ config }: { config: AgentConfig }) {
    ================================================================= */
 
 function LogisticsDashboard({ config }: { config: AgentConfig }) {
-  const shipments = [
-    { id: "SHP-2026-0519-A", route: "HCM → Long Beach", eta: "2026-06-05", status: "on-track" as const, detail: "Stable" },
-    { id: "SHP-2026-0518-B", route: "Haiphong → Savannah", eta: "2026-06-12 (+3d)", status: "delayed" as const, detail: "Storm" },
+  const SHIPMENTS = [
+    { id: "SHP-0519-A", origin: "HCM", dest: "Long Beach", vessel: "EVER GIVEN", departure: "05/10", eta: "06/05", status: "on-track" as const, progress: 62, cartons: 2400, cbm: 86.4, cost: 4200, airAlt: 18500 },
+    { id: "SHP-0518-B", origin: "Haiphong", dest: "Savannah", vessel: "MSC BELLA", departure: "05/08", eta: "06/15", status: "delayed" as const, progress: 48, cartons: 1800, cbm: 64.8, cost: 3100, airAlt: 14200, delayReason: "Tropical Storm" },
+    { id: "SHP-0517-C", origin: "Chittagong", dest: "Rotterdam", vessel: "MAERSK SELETAR", departure: "05/05", eta: "06/02", status: "on-track" as const, progress: 78, cartons: 3200, cbm: 115.2, cost: 5600, airAlt: 24000 },
+    { id: "SHP-0520-D", origin: "Phnom Penh", dest: "Los Angeles", vessel: "CMA CGM MARCO", departure: "05/12", eta: "06/08", status: "on-track" as const, progress: 55, cartons: 1500, cbm: 54.0, cost: 2800, airAlt: 12500 },
   ]
+
+  const [selectedShip, setSelectedShip] = useState(0)
+  const ship = SHIPMENTS[selectedShip]
+
+  const costCompare = SHIPMENTS.map((s) => ({
+    name: s.id.replace("SHP-", ""),
+    Sea: s.cost,
+    Air: s.airAlt,
+    Savings: s.airAlt - s.cost,
+  }))
+
+  const transitTimeline = [
+    { day: "D+0", pct: 0 }, { day: "D+5", pct: 15 }, { day: "D+10", pct: 32 },
+    { day: "D+15", pct: 48 }, { day: "D+20", pct: 62 }, { day: "D+25", pct: 78 },
+    { day: "D+28", pct: 90 }, { day: "D+30", pct: 100 },
+  ]
+
+  const onTrack = SHIPMENTS.filter((s) => s.status === "on-track").length
+  const totalCartons = SHIPMENTS.reduce((s, sh) => s + sh.cartons, 0)
 
   return (
     <>
       <KpiGrid items={[
-        { label: "Active Vessels", value: "142", icon: Package },
-        { label: "Active Flights", value: "28", icon: Truck },
-        { label: "On Track", value: "89%", change: "-2.1% 전주 대비", positive: false, icon: Activity },
+        { label: "Active Shipments", value: `${SHIPMENTS.length}`, icon: Package },
+        { label: "On Track Rate", value: `${Math.round((onTrack / SHIPMENTS.length) * 100)}%`, change: "-2.1% 전주 대비", positive: false, icon: Activity },
+        { label: "Total Cartons", value: totalCartons.toLocaleString(), icon: Truck },
         { label: "ETA 정확도", value: "95%", icon: BarChart3 },
       ]} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="border-0 shadow-sm lg:col-span-2">
           <CardContent className="p-5">
-            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Real-time Route Tracking</h3>
-            <div className="relative rounded-lg bg-sky-50 border border-sky-200 h-[320px] flex items-center justify-center overflow-hidden">
-              <span className="text-7xl opacity-40">🌍</span>
-              <div className="absolute text-xs font-bold text-red-600" style={{ top: "40%", left: "25%" }}>Vietnam</div>
-              <div className="absolute text-xs font-bold text-red-600" style={{ top: "25%", left: "72%" }}>USA</div>
-              <div className="absolute text-3xl animate-bounce" style={{ top: "35%", left: "50%" }}>🚢</div>
-              <div className="absolute bottom-3 left-3 bg-white/80 px-3 py-1.5 rounded text-[10px] text-gray-600">
-                AIS Data: Live | Weather API: Connected
+            <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900">Real-time Route Tracking</h3>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] text-gray-500">AIS Live</span>
+              </div>
+            </div>
+            <div className="relative rounded-lg bg-gradient-to-r from-sky-50 to-blue-50 border border-sky-200 h-[280px] overflow-hidden">
+              <div className="absolute text-[10px] font-bold text-blue-800 bg-white/70 px-2 py-1 rounded" style={{ top: "55%", left: "12%" }}>🇻🇳 Vietnam</div>
+              <div className="absolute text-[10px] font-bold text-blue-800 bg-white/70 px-2 py-1 rounded" style={{ top: "50%", left: "5%" }}>🇧🇩 Bangladesh</div>
+              <div className="absolute text-[10px] font-bold text-blue-800 bg-white/70 px-2 py-1 rounded" style={{ top: "55%", left: "18%" }}>🇰🇭 Cambodia</div>
+              <div className="absolute text-[10px] font-bold text-red-700 bg-white/70 px-2 py-1 rounded" style={{ top: "25%", left: "78%" }}>🇺🇸 USA</div>
+              <div className="absolute text-[10px] font-bold text-red-700 bg-white/70 px-2 py-1 rounded" style={{ top: "30%", left: "55%" }}>🇳🇱 Rotterdam</div>
+
+              {SHIPMENTS.map((s, i) => {
+                const leftPos = 15 + (s.progress / 100) * 65
+                const topPos = 35 + i * 8
+                return (
+                  <button key={s.id} onClick={() => setSelectedShip(i)} className={cn("absolute transition-all duration-500", i === selectedShip && "scale-125 z-10")} style={{ left: `${leftPos}%`, top: `${topPos}%` }}>
+                    <span className={cn("text-xl", s.status === "delayed" && "animate-pulse")}>{s.status === "delayed" ? "⚠️" : "🚢"}</span>
+                  </button>
+                )
+              })}
+
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                <span className="bg-white/80 px-2 py-1 rounded text-[10px] text-gray-600">Weather API: Connected</span>
+                <span className="bg-white/80 px-2 py-1 rounded text-[10px] text-gray-600">Selected: {ship.id}</span>
+              </div>
+            </div>
+
+            <div className="mt-4 p-4 rounded-lg border border-gray-200 bg-white">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">{ship.id} — {ship.vessel}</p>
+                  <p className="text-xs text-gray-500">{ship.origin} → {ship.dest} | Departed {ship.departure}</p>
+                </div>
+                <Badge className={cn("text-[10px]", ship.status === "on-track" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-red-50 text-red-700 border-red-200")} variant="outline">
+                  {ship.status === "on-track" ? "On Track" : `Delayed (${ship.delayReason})`}
+                </Badge>
+              </div>
+              <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                <div className={cn("h-full rounded-full transition-all duration-500", ship.status === "delayed" ? "bg-red-500" : "bg-emerald-500")} style={{ width: `${ship.progress}%` }} />
+              </div>
+              <div className="flex items-center justify-between text-[10px] text-gray-500">
+                <span>Progress: {ship.progress}%</span>
+                <span>{ship.cartons.toLocaleString()} ctns · {ship.cbm} CBM</span>
+                <span>ETA: <strong className={ship.status === "delayed" ? "text-red-600" : "text-gray-900"}>{ship.eta}</strong></span>
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card className="border-0 shadow-sm">
-          <CardContent className="p-5 flex flex-col gap-4">
-            <h3 className="text-sm font-bold text-gray-900 pb-3 border-b border-gray-100">Urgent Shipments</h3>
-            {shipments.map((s) => (
-              <div
-                key={s.id}
-                className={cn(
-                  "p-4 rounded-lg border",
-                  s.status === "delayed" ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"
-                )}
-              >
-                <p className="text-sm font-bold text-gray-900">{s.id}</p>
-                <Badge
-                  className={cn(
-                    "text-[10px] mt-1",
-                    s.status === "on-track"
-                      ? "bg-green-50 text-green-700 border-green-200"
-                      : "bg-red-50 text-red-700 border-red-200"
-                  )}
-                  variant="outline"
-                >
-                  {s.status === "on-track" ? "On Track" : `Delayed (${s.detail})`}
-                </Badge>
-                <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
-                  Route: {s.route}<br />
-                  ETA: {s.status === "delayed" ? (
-                    <span className="text-red-600 font-bold">{s.eta}</span>
-                  ) : (
-                    <span>{s.eta} ({s.detail})</span>
-                  )}
-                </p>
-              </div>
-            ))}
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Shipment List</h3>
+            <div className="space-y-2">
+              {SHIPMENTS.map((s, i) => (
+                <button key={s.id} onClick={() => setSelectedShip(i)} className={cn("w-full text-left p-3 rounded-lg border transition-all", i === selectedShip ? "border-blue-400 bg-blue-50" : s.status === "delayed" ? "border-red-200 bg-red-50/50 hover:bg-red-50" : "border-gray-200 bg-white hover:bg-gray-50")}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-gray-900">{s.id}</span>
+                    <span className={cn("w-2 h-2 rounded-full", s.status === "on-track" ? "bg-emerald-500" : "bg-red-500")} />
+                  </div>
+                  <p className="text-[10px] text-gray-500">{s.origin} → {s.dest}</p>
+                  <div className="h-1 bg-gray-200 rounded-full overflow-hidden mt-1.5">
+                    <div className={cn("h-full rounded-full", s.status === "delayed" ? "bg-red-400" : "bg-emerald-400")} style={{ width: `${s.progress}%` }} />
+                  </div>
+                </button>
+              ))}
+            </div>
 
-            <Card className="border-0 bg-gray-50 mt-auto">
-              <CardContent className="p-4 flex items-start gap-3">
-                <span className="text-sm">💡</span>
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  지연된 <strong>SHP-0518-B</strong> 건의 긴급 물량은 <strong>항공 운송(Air Freight)</strong>으로 전환하여 납기를 맞출 것을 권장합니다.
-                </p>
-              </CardContent>
-            </Card>
+            {SHIPMENTS.some((s) => s.status === "delayed") && (
+              <Card className="border-0 bg-amber-50 mt-4">
+                <CardContent className="p-3 flex items-start gap-2">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-amber-800 leading-relaxed">
+                    <strong>SHP-0518-B</strong> 지연분의 긴급 물량은 <strong>항공 운송</strong>으로 전환 시 6/03 도착 가능 (추가 비용: ${(SHIPMENTS[1].airAlt - SHIPMENTS[1].cost).toLocaleString()})
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4">Sea vs Air Freight Cost ($)</h3>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={costCompare} barCategoryGap="20%">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip contentStyle={TT} />
+                  <Legend wrapperStyle={{ fontSize: 10 }} />
+                  <Bar dataKey="Sea" fill="#1E3A5F" name="Sea Freight" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Air" fill="#EF4444" name="Air Freight" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4">Transit Progress Curve (Typical)</h3>
+            <div className="h-[200px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={transitTimeline}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="day" tick={{ fontSize: 10 }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
+                  <Tooltip contentStyle={TT} />
+                  <Line type="monotone" dataKey="pct" stroke="#1E3A5F" strokeWidth={2} name="Progress" dot={{ r: 3 }} />
+                  <ReferenceLine y={ship.progress} stroke="#EF4444" strokeDasharray="3 3" label={{ value: `Current: ${ship.progress}%`, fontSize: 9, fill: "#EF4444" }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
       </div>
