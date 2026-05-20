@@ -1,27 +1,133 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* Hansae Brand Tokens */
+    --hansae-navy: #1E3A5F;
+    --hansae-red: #C41E3A;
+    --hansae-surface: #F5F6F8;
+    --teams-purple: #6264A7;
+    --hansae-navy-light: #2A4D7A;
+    --hansae-navy-dark: #152C49;
+
+    /* shadcn theme — Hansae branded (HSL values for Tailwind v3) */
+    --background: 220 17.6% 96.7%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 214.2 52% 24.5%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 214 30% 90%;
+    --accent-foreground: 214.2 52% 24.5%;
+    --destructive: 349.9 73.5% 44.3%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 214.2 52% 24.5%;
+    --radius: 0.625rem;
+
+    --chart-1: 214.2 52% 24.5%;
+    --chart-2: 349.9 73.5% 44.3%;
+    --chart-3: 238.3 28.2% 52%;
+    --chart-4: 160 40% 50%;
+    --chart-5: 40 60% 55%;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 214.2 52% 24.5%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 30% 93%;
+    --sidebar-accent-foreground: 214.2 52% 24.5%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 214.2 52% 24.5%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 214 50% 55%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 214 35% 25%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 214 50% 55%;
+
+    --chart-1: 214 50% 55%;
+    --chart-2: 0 62.8% 50%;
+    --chart-3: 238 28% 60%;
+    --chart-4: 160 40% 55%;
+    --chart-5: 40 60% 60%;
+
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 214 50% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 214 35% 25%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 214 50% 55%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont,
+      system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo',
+      'Noto Sans KR', 'Malgun Gothic', 'Apple Color Emoji', 'Segoe UI Emoji',
+      'Segoe UI Symbol', sans-serif;
+  }
 }
 
+/* Hansae Brand Utility Classes */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .teams-gradient {
+    background: linear-gradient(135deg, #6264A7 0%, #464775 100%);
+  }
+
+  .hansae-gradient {
+    background: linear-gradient(135deg, #1E3A5F 0%, #2A4D7A 100%);
+  }
+
+  .hansae-gradient-text {
+    background: linear-gradient(135deg, #1E3A5F 0%, #2A4D7A 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
 }

@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  users     User[]
+  agents    Agent[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  role         String   @default("USER")
+  teamId       String
+  team         Team     @relation(fields: [teamId], references: [id])
+  createdAt    DateTime @default(now())
+  agents              Agent[]           @relation("AgentOwner")
+  jobs                Job[]
+  approvalsDecided    ApprovalRequest[] @relation("Approver")
+  approvalsRequested  ApprovalRequest[] @relation("ApprovalRequester")
+  auditLogs           AuditLog[]
+  chatSessions        ChatSession[]
+  favorites           Favorite[]
+}
+
+model Agent {
+  id                 String   @id @default(cuid())
+  slug               String   @unique
+  name               String
+  description        String
+  agentGroup         String
+  buildTier          String
+  runtimeType        String
+  dataClassification String
+  status             String   @default("DRAFT")
+  demoRunnable       Boolean  @default(false)
+  lockedReason       String?
+  tags               String   @default("[]")
+  inputsSchema       String   @default("[]")
+  outputsSchema      String   @default("[]")
+  templateId         String?
+  workflowJson       String?
+  executorKey        String?
+  department         String?
+  asIsSummary        String?
+  toBeSummary        String?
+  workflowMd         String?
+  ownerId            String
+  owner              User     @relation("AgentOwner", fields: [ownerId], references: [id])
+  teamId             String
+  team               Team     @relation(fields: [teamId], references: [id])
+  publishedVersionId String?  @unique
+  publishedVersion   AgentVersion? @relation("PublishedVersion", fields: [publishedVersionId], references: [id])
+  versions           AgentVersion[] @relation("AgentVersions")
+  forkedFromId       String?
+  forkedFrom         Agent?   @relation("Forks", fields: [forkedFromId], references: [id])
+  forks              Agent[]  @relation("Forks")
+  approvalRequests   ApprovalRequest[]
+  jobs               Job[]
+  favorites          Favorite[]
+  runCount           Int      @default(0)
+  lastRunAt          DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([status])
+  @@index([agentGroup])
+  @@index([teamId])
+}
+
+model AgentVersion {
+  id            String     @id @default(cuid())
+  agentId       String
+  agent         Agent      @relation("AgentVersions", fields: [agentId], references: [id], onDelete: Cascade)
+  version       String
+  changelog     String?
+  status        String
+  createdAt     DateTime   @default(now())
+  artifacts        Artifact[]
+  publishedFor     Agent?   @relation("PublishedVersion")
+  approvalRequests ApprovalRequest[]
+
+  @@unique([agentId, version])
+}
+
+model Artifact {
+  id             String       @id @default(cuid())
+  agentVersionId String
+  agentVersion   AgentVersion @relation(fields: [agentVersionId], references: [id], onDelete: Cascade)
+  kind           String
+  fileName       String
+  blobUrl        String
+  blobPathname   String
+  sizeBytes      Int
+  mimeType       String
+  createdAt      DateTime     @default(now())
+
+  @@index([agentVersionId])
+}
+
+model ApprovalRequest {
+  id          String    @id @default(cuid())
+  agentId     String
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  versionId   String
+  version     AgentVersion @relation(fields: [versionId], references: [id])
+  requesterId String
+  requester   User      @relation("ApprovalRequester", fields: [requesterId], references: [id])
+  approverId  String?
+  approver    User?     @relation("Approver", fields: [approverId], references: [id])
+  decision    String    @default("PENDING")
+  comment     String?
+  decidedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([decision])
+  @@index([agentId])
+}
+
+model Job {
+  id              String    @id @default(cuid())
+  agentId         String
+  agent           Agent     @relation(fields: [agentId], references: [id])
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  status          String    @default("QUEUED")
+  inputParams     String    @default("{}")
+  orchestratorRaw String?
+  errorMessage    String?
+  summaryMessage  String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  durationMs      Int?
+  isSandbox       Boolean   @default(false)
+  chatSessionId   String?
+  chatSession     ChatSession? @relation(fields: [chatSessionId], references: [id])
+  steps           JobStep[]
+  outputFiles     JobOutputFile[]
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+  @@index([agentId])
+  @@index([status])
+  @@index([chatSessionId])
+}
+
+model JobStep {
+  id        String    @id @default(cuid())
+  jobId     String
+  job       Job       @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  seq       Int
+  label     String
+  status    String
+  startedAt DateTime?
+  endedAt   DateTime?
+}
+
+model JobOutputFile {
+  id           String   @id @default(cuid())
+  jobId        String
+  job          Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  fileName     String
+  blobUrl      String
+  blobPathname String
+  mimeType     String
+  sizeBytes    Int
+  previewJson  String?
+  createdAt    DateTime @default(now())
+}
+
+model ChatSession {
+  id        String        @id @default(cuid())
+  userId    String
+  user      User          @relation(fields: [userId], references: [id])
+  title     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+  jobs      Job[]
+}
+
+model ChatMessage {
+  id        String      @id @default(cuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  role      String
+  content   String
+  metadata  String?
+  createdAt DateTime    @default(now())
+
+  @@index([sessionId])
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  agentId   String
+  agent     Agent    @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, agentId])
+}
+
+model Template {
+  id                 String   @id
+  name               String
+  description        String
+  buildTier          String   @default("NOCODE")
+  runtimeType        String
+  dataClassification String
+  formSchema         String
+  defaultExecutorKey String
+  createdAt          DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  eventType  String
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id])
+  agentId    String?
+  jobId      String?
+  payload    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
