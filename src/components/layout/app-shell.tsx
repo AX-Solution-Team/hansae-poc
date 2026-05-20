@@ -8,7 +8,7 @@ import { useAuthContext } from "@/hooks/use-auth"
 import {
   Home, MessageSquare, Store, Hammer, CheckSquare, Bot,
   LayoutGrid, Shield, ChevronLeft, ChevronRight, LogOut,
-  User, History, Settings
+  User, History, Settings, Wand2, Code, ArrowRightLeft, Eye,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -48,8 +48,12 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/run/jobs", label: "실행 이력", icon: History },
   { href: "/marketplace", label: "마켓플레이스", icon: Store },
   { href: "/build", label: "빌드", icon: Hammer, minRole: "CREATOR" },
+  { href: "/build/studio", label: "Agent Studio", icon: Wand2, minRole: "CREATOR" },
+  { href: "/build/developer", label: "개발자 도구", icon: Code, minRole: "CREATOR" },
+  { href: "/build/migration", label: "자산 마이그레이션", icon: ArrowRightLeft, minRole: "CREATOR" },
   { href: "/approvals", label: "승인함", icon: CheckSquare, minRole: "APPROVER" },
   { href: "/agents", label: "에이전트", icon: Bot },
+  { href: "/admin/governance", label: "거버넌스", icon: Eye, minRole: "ADMIN" },
   { href: "/admin/audit", label: "감사 로그", icon: Shield, minRole: "ADMIN" },
   { href: "/admin/users", label: "사용자 관리", icon: User, minRole: "ADMIN" },
   { href: "/admin/agents", label: "에이전트 관리", icon: LayoutGrid, minRole: "ADMIN" },

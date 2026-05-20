@@ -11,7 +11,7 @@ import {
   Activity, Layers, CheckCircle2, AlertTriangle,
   FileSpreadsheet, Download, Package, Ruler, ShoppingBag,
   ClipboardCheck, Factory, Loader2, Bot, RefreshCw,
-  FileText, Truck, XCircle,
+  FileText, Truck, XCircle, Clock, Tag, Eye,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -128,6 +128,42 @@ const AGENTS: Record<string, AgentConfig> = {
     desc: "한세실업 주가 및 시장 데이터 일일 대시보드",
     steps: ["시장 데이터 수집", "주가 지표 계산", "섹터 비교 분석", "대시보드 갱신"],
     outputFile: "bi_daily_20240520.xlsx", outputSize: "156 KB",
+  },
+  "fabric-cost-calculator": {
+    name: "원단 단가 계산 자동화",
+    desc: "복잡한 원단 스펙을 입력하면 최신 원사 가격과 공임 데이터를 반영하여 정확한 예상 단가를 산출",
+    steps: ["원단 스펙 분석", "원사 시세 조회", "공임 계산", "최적 소싱처 추천"],
+    outputFile: "fabric_cost_estimate.xlsx", outputSize: "98 KB",
+  },
+  "design-techpack": {
+    name: "Tech Pack 데이터 추출",
+    desc: "디자이너의 Tech Pack을 AI가 시각적으로 이해하고, BOM을 자동 생성",
+    steps: ["문서 스캐닝", "멀티모달 분석", "BOM 데이터 추출", "사양 검증"],
+    outputFile: "techpack_bom_extracted.xlsx", outputSize: "145 KB",
+  },
+  "comm-buyer-email": {
+    name: "바이어 메일 자동 응대",
+    desc: "바이어의 문의 메일을 분석하여 ERP 데이터 기반 답변 초안을 자동 생성",
+    steps: ["이메일 분석", "요청사항 분류", "ERP 데이터 조회", "답변 초안 생성"],
+    outputFile: "email_draft_response.docx", outputSize: "56 KB",
+  },
+  "prod-line-optimizer": {
+    name: "생산 공정 최적화",
+    desc: "공장별 실시간 가동률과 생산 데이터를 분석하여 병목 구간을 찾고 최적 라인 배치 제안",
+    steps: ["생산라인 데이터 수집", "가동률 분석", "병목 구간 탐지", "최적 배치 계산"],
+    outputFile: "production_optimization.xlsx", outputSize: "178 KB",
+  },
+  "prod-qc-vision": {
+    name: "품질 관리 및 불량 예측",
+    desc: "비전 AI를 통해 생산 현장의 불량을 실시간 탐지하고 불량 패턴을 분석",
+    steps: ["카메라 영상 분석", "불량 탐지", "유형 분류", "패턴 분석 및 경고"],
+    outputFile: "qc_defect_report.xlsx", outputSize: "234 KB",
+  },
+  "logistics-tracker": {
+    name: "물류 최적화 및 가시성 확보",
+    desc: "전 세계로 배송되는 제품의 실시간 위치를 추적하고 최적 경로를 재설계",
+    steps: ["선적 데이터 수집", "실시간 위치 추적", "기상/항만 분석", "최적 경로 계산"],
+    outputFile: "logistics_optimization.xlsx", outputSize: "167 KB",
   },
 }
 
@@ -423,6 +459,13 @@ function DashboardHeader({ config, onRerun }: { config: AgentConfig; onRerun: ()
    Dashboard: Design Crawl Brand
    ================================================================= */
 
+const TREND_PRODUCTS = [
+  { name: "Oversized Linen Blend Blazer", price: "€79.90", emoji: "🧥", tag: "Best Seller", tags: ["Linen", "Oversized", "Natural Tone"], weeks: [{ w: "W18", h: 80 }, { w: "W19", h: 80 }, { w: "W20", h: 60 }, { w: "W21", h: 60 }], desc: "린넨 혼방 소재의 오버사이즈 핏. 내추럴 톤의 버튼 디테일이 특징." },
+  { name: "Printed Satin Effect Dress", price: "€45.95", emoji: "👗", tag: "New Entry", tags: ["Satin", "Geometric", "V-Neck"], weeks: [{ w: "W18", h: 0 }, { w: "W19", h: 0 }, { w: "W20", h: 40 }, { w: "W21", h: 75 }], desc: "기하학적 프린트의 새틴 소재 드레스. V넥 라인과 롱 슬리브." },
+  { name: "Wide Leg Cropped Jeans", price: "€39.95", emoji: "👖", tag: "Trending", tags: ["Denim", "Wide Leg", "Cropped"], weeks: [{ w: "W18", h: 50 }, { w: "W19", h: 60 }, { w: "W20", h: 70 }, { w: "W21", h: 85 }], desc: "와이드 레그 크롭 핏 데님. 하이웨이스트 디자인." },
+  { name: "Ribbed Knit Tank Top", price: "€19.95", emoji: "👕", tag: "Steady", tags: ["Ribbed", "Knit", "Basic"], weeks: [{ w: "W18", h: 70 }, { w: "W19", h: 65 }, { w: "W20", h: 68 }, { w: "W21", h: 72 }], desc: "립 니트 소재의 베이직 탱크탑. 슬림 핏 실루엣." },
+]
+
 function DesignCrawlDashboard({ brand, config }: { brand: string; config: AgentConfig }) {
   const products = PRODUCTS[brand] || PRODUCTS.ZARA
   const avgTrend = Math.round(products.reduce((s, p) => s + p.trend, 0) / products.length)
@@ -431,28 +474,65 @@ function DesignCrawlDashboard({ brand, config }: { brand: string; config: AgentC
   return (
     <>
       <KpiGrid items={[
+        { label: "정보 수집량", value: "20x↑", change: "vs 수동 수집", positive: true, icon: Eye },
+        { label: "분석 리드타임", value: "-90%", icon: Clock },
         { label: "분석 제품수", value: `${products.length}개`, icon: Package },
-        { label: "평균 트렌드 점수", value: `${avgTrend}점`, change: "+5.2 vs 전월", positive: true, icon: TrendingUp },
         { label: "평균 FOB", value: `$${avgFob}`, icon: DollarSign },
-        { label: "상위 카테고리", value: "Trousers", icon: ShoppingBag },
       ]} />
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-6">
-          <h3 className="text-sm font-semibold text-gray-900 mb-1">제품별 트렌드 점수</h3>
-          <p className="text-xs text-gray-500 mb-4">{brand} Trousers 카테고리</p>
-          <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={products} barCategoryGap="20%">
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="style" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
-                <Tooltip contentStyle={TT} formatter={(v) => [`${v}점`, "트렌드"]} />
-                <Bar dataKey="trend" fill="#7C3AED" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
+
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-bold text-gray-900">{brand} New Arrival Analysis (Week 21)</h3>
+        <span className="text-xs text-gray-500">Region: <strong className="text-gray-900">Global / Spain</strong></span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {TREND_PRODUCTS.map((tp) => (
+          <Card key={tp.name} className="border-0 shadow-sm overflow-hidden">
+            <div className="h-[100px] bg-gray-100 flex items-center justify-center relative">
+              <span className="text-5xl">{tp.emoji}</span>
+              <span className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded">{tp.tag}</span>
+            </div>
+            <CardContent className="p-4 space-y-2">
+              <div className="text-sm font-bold text-gray-900">{tp.name}</div>
+              <div className="text-sm font-bold text-red-600">{tp.price}</div>
+              <p className="text-[11px] text-gray-500 leading-relaxed">{tp.desc}</p>
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-100">
+                <p className="text-[9px] font-bold text-gray-700 mb-2">Price Trend (Last 4 Weeks)</p>
+                <div className="flex items-end gap-2 h-[50px]">
+                  {tp.weeks.map((w, i) => (
+                    <div key={w.w} className="flex-1 flex flex-col items-center">
+                      <div className="w-full rounded-t" style={{ height: `${w.h * 0.5}px`, background: i >= 2 ? "#3B82F6" : "#EF4444" }} />
+                      <span className="text-[8px] text-gray-400 mt-1">{w.w}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-2.5 border border-gray-100">
+                <p className="text-[9px] font-bold text-red-600 mb-1.5">AI Style Tagging</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {tp.tags.map((t) => (
+                    <span key={t} className="text-[9px] bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">{t}</span>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="border-0 shadow-sm bg-gray-50">
+        <CardContent className="p-4 flex items-start gap-3">
+          <div className="w-8 h-8 rounded-lg bg-hansae-navy flex items-center justify-center flex-shrink-0 text-sm">📊</div>
+          <div>
+            <p className="text-xs font-bold text-gray-900">시장 분석 인사이트</p>
+            <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+              이번 주 ZARA의 신제품 중 <strong>&apos;Linen&apos;</strong> 소재 비중이 전주 대비 <strong>25% 증가</strong>했습니다.
+              당사 S/S 시즌 기획에 반영을 검토하십시오. Wide Leg 실루엣이 3주 연속 상승세입니다.
+            </p>
           </div>
         </CardContent>
       </Card>
+
       <Card className="border-0 shadow-sm">
         <CardContent className="p-0">
           <div className="px-6 py-4 border-b border-gray-100">
@@ -602,27 +682,123 @@ function PoRecapDashboard({ slug, config }: { slug: string; config: AgentConfig 
   return (
     <>
       <KpiGrid items={[
-        { label: "PO 라인수", value: `${PO_ORDERS.length}건`, icon: FileText },
-        { label: "총 수량", value: totalQty.toLocaleString(), change: "+8.3% vs 전월", positive: true, icon: Package },
+        { label: "처리 시간", value: "1.2s", icon: Clock },
+        { label: "정확도", value: "99.9%", change: "AI Vision 검증", positive: true, icon: CheckCircle2 },
+        { label: "총 수량", value: totalQty.toLocaleString(), icon: Package },
         { label: "총 금액", value: `$${Math.round(totalAmt).toLocaleString()}`, icon: DollarSign },
-        { label: "평균 단가", value: `$${(totalAmt / totalQty).toFixed(2)}`, icon: BarChart3 },
       ]} />
-      {slug === "po-sample-pdf-excel" && (
-        <Card className="border-0 shadow-sm bg-blue-50/50">
-          <CardContent className="p-4 flex items-center gap-3">
-            <FileText className="w-5 h-5 text-blue-600" />
-            <div>
-              <p className="text-sm font-medium text-blue-900">PDF 변환 완료</p>
-              <p className="text-xs text-blue-600">3페이지 · 2개 테이블 추출 · 변환 정확도 98.5% · 처리시간 2.3초</p>
+
+      <div className="grid grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-0">
+            <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
+              <span className="text-xs font-bold text-gray-700">Source: Target_PO_829103.pdf</span>
+              <span className="text-[10px] text-gray-400">Page 1 of 1</span>
+            </div>
+            <div className="p-5 bg-gray-100 min-h-[360px] relative">
+              <div className="bg-white p-5 shadow-sm rounded space-y-4 relative">
+                <div className="border-b-2 border-black pb-2 font-black text-base">TARGET PURCHASE ORDER</div>
+                <div className="flex justify-between text-xs text-gray-700">
+                  <div><strong>PO Number:</strong> 829103</div>
+                  <div><strong>Date:</strong> 05/19/2026</div>
+                </div>
+                <div className="absolute top-[42px] left-[120px] w-[52px] h-[14px] border-2 border-red-500 bg-red-500/5 rounded-sm">
+                  <span className="absolute -top-4 left-0 bg-red-500 text-white text-[7px] font-bold px-1 rounded">PO_NUM</span>
+                </div>
+                <table className="w-full text-[10px] mt-4 border-collapse">
+                  <thead><tr className="border-b border-black">
+                    <th className="text-left py-1">Style / Description</th>
+                    <th className="text-left py-1">Color</th>
+                    <th className="text-right py-1">Qty</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr><td className="py-1">TS-102 / Men&apos;s Basic Tee</td><td>NAVY BLUE</td><td className="text-right">1,200</td></tr>
+                    <tr><td className="py-1">TS-102 / Men&apos;s Basic Tee</td><td>PURE WHITE</td><td className="text-right">850</td></tr>
+                    <tr><td className="py-1">TS-205 / Women&apos;s V-Neck</td><td>CORAL PINK</td><td className="text-right">1,500</td></tr>
+                  </tbody>
+                </table>
+                <div className="absolute top-[105px] left-[16px] w-[200px] h-[50px] border-2 border-red-500 bg-red-500/5 rounded-sm">
+                  <span className="absolute -top-4 left-0 bg-red-500 text-white text-[7px] font-bold px-1 rounded">LINE_ITEMS</span>
+                </div>
+                <div className="absolute top-[120px] left-[220px] w-[70px] h-[12px] border-2 border-red-500 bg-red-500/5 rounded-sm">
+                  <span className="absolute -top-4 left-0 bg-red-500 text-white text-[7px] font-bold px-1 rounded">COLOR</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
-      )}
+
+        <div className="space-y-4">
+          <Card className="border-0 shadow-sm">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <span className="text-xs font-bold text-gray-700">Extracted Result (ERP Template)</span>
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">✓ 100% Mapped</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead><tr className="bg-gray-50 border-b border-gray-100">
+                    <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Style No</th>
+                    <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Color Code</th>
+                    <th className="text-left py-2.5 px-3 text-gray-500 font-medium">Size</th>
+                    <th className="text-right py-2.5 px-3 text-gray-500 font-medium">Qty</th>
+                    <th className="text-right py-2.5 px-3 text-gray-500 font-medium">Price</th>
+                  </tr></thead>
+                  <tbody>
+                    <tr className="border-b border-gray-50 hover:bg-gray-50/50">
+                      <td className="py-2.5 px-3 font-bold">TS-102</td>
+                      <td className="py-2.5 px-3 text-red-600 font-medium">NVY-001</td>
+                      <td className="py-2.5 px-3">OS</td>
+                      <td className="py-2.5 px-3 text-right">1,200</td>
+                      <td className="py-2.5 px-3 text-right">$4.50</td>
+                    </tr>
+                    <tr className="border-b border-gray-50 hover:bg-gray-50/50">
+                      <td className="py-2.5 px-3 font-bold">TS-102</td>
+                      <td className="py-2.5 px-3 text-red-600 font-medium">WHT-002</td>
+                      <td className="py-2.5 px-3">OS</td>
+                      <td className="py-2.5 px-3 text-right">850</td>
+                      <td className="py-2.5 px-3 text-right">$4.50</td>
+                    </tr>
+                    <tr className="border-b border-gray-50 hover:bg-gray-50/50">
+                      <td className="py-2.5 px-3 font-bold">TS-205</td>
+                      <td className="py-2.5 px-3 text-red-600 font-medium">CPK-003</td>
+                      <td className="py-2.5 px-3">OS</td>
+                      <td className="py-2.5 px-3 text-right">1,500</td>
+                      <td className="py-2.5 px-3 text-right">$5.20</td>
+                    </tr>
+                    <tr className="bg-gray-50">
+                      <td colSpan={3} className="py-2.5 px-3 text-right font-bold">Total</td>
+                      <td className="py-2.5 px-3 text-right font-bold text-red-600">3,550</td>
+                      <td className="py-2.5 px-3 text-right font-medium">$23,830</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="border-0 shadow-sm bg-gray-50">
+            <CardContent className="p-4 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-hansae-navy flex items-center justify-center flex-shrink-0">
+                <span className="text-sm">✨</span>
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-900">AI Mapping Note</p>
+                <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
+                  &apos;NAVY BLUE&apos;를 한세 표준 코드 <strong>&apos;NVY-001&apos;</strong>로 자동 매핑했습니다. 과거 12건의 이력과 일치합니다.
+                  &apos;CORAL PINK&apos;는 신규 코드 <strong>&apos;CPK-003&apos;</strong>으로 등록되었습니다.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
       <Card className="border-0 shadow-sm">
         <CardContent className="p-6">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">스타일별 오더 수량</h3>
           <p className="text-xs text-gray-500 mb-4">{slug === "po-download" ? "바이어 포탈에서 다운로드된 PO" : slug === "po-sample-pdf-excel" ? "PDF에서 변환된 PO" : "파싱된 PO 오더리캡"}</p>
-          <div className="h-[280px]">
+          <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={PO_ORDERS.map(o => ({ style: o.style, qty: o.s + o.m + o.l + o.xl }))} barCategoryGap="15%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -632,38 +808,6 @@ function PoRecapDashboard({ slug, config }: { slug: string; config: AgentConfig 
                 <Bar dataKey="qty" fill="#1E3A5F" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="border-0 shadow-sm">
-        <CardContent className="p-0">
-          <div className="px-6 py-4 border-b border-gray-100"><h3 className="text-sm font-semibold text-gray-900">오더 상세</h3></div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="border-b border-gray-100 bg-gray-50/50">
-                {["PO#", "Style", "제품명", "컬러", "S", "M", "L", "XL", "합계", "단가", "금액", "납기", "상태"].map(h => <th key={h} className="text-left py-2.5 px-3 text-xs font-medium text-gray-500 whitespace-nowrap">{h}</th>)}
-              </tr></thead>
-              <tbody>{PO_ORDERS.map(o => {
-                const total = o.s + o.m + o.l + o.xl
-                return (
-                  <tr key={o.po} className="border-b border-gray-50 hover:bg-gray-50/50">
-                    <td className="py-2.5 px-3 font-mono text-xs text-gray-600">{o.po}</td>
-                    <td className="py-2.5 px-3 font-mono text-xs">{o.style}</td>
-                    <td className="py-2.5 px-3 text-gray-900">{o.desc}</td>
-                    <td className="py-2.5 px-3 text-gray-600">{o.color}</td>
-                    <td className="py-2.5 px-3 text-gray-600 text-right">{o.s}</td>
-                    <td className="py-2.5 px-3 text-gray-600 text-right">{o.m}</td>
-                    <td className="py-2.5 px-3 text-gray-600 text-right">{o.l}</td>
-                    <td className="py-2.5 px-3 text-gray-600 text-right">{o.xl}</td>
-                    <td className="py-2.5 px-3 font-medium text-right">{total.toLocaleString()}</td>
-                    <td className="py-2.5 px-3 text-gray-700">${o.price.toFixed(2)}</td>
-                    <td className="py-2.5 px-3 font-medium">${(total * o.price).toLocaleString()}</td>
-                    <td className="py-2.5 px-3 text-gray-600 text-xs">{o.delivery}</td>
-                    <td className="py-2.5 px-3"><Badge className={cn("text-xs", o.status === "CONFIRMED" ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700")} variant="outline">{o.status}</Badge></td>
-                  </tr>
-                )
-              })}</tbody>
-            </table>
           </div>
         </CardContent>
       </Card>
@@ -1074,6 +1218,474 @@ function BiDashboard({ config }: { config: AgentConfig }) {
 }
 
 /* =================================================================
+   Dashboard: Fabric Cost Calculator (4-8)
+   ================================================================= */
+
+function FabricCostDashboard({ config }: { config: AgentConfig }) {
+  const costItems = [
+    { item: "Yarn Cost", detail: "Cotton 30s + Span 20D", cost: 2.45 },
+    { item: "Knitting", detail: "Circular Knit (Standard)", cost: 0.65 },
+    { item: "Dyeing/Finishing", detail: "Solid Dyeing + Softener", cost: 1.10 },
+    { item: "Loss/Others", detail: "Wastage 5% included", cost: 0.21 },
+  ]
+  const totalCost = costItems.reduce((s, c) => s + c.cost, 0)
+
+  return (
+    <>
+      <KpiGrid items={[
+        { label: "Estimated Cost", value: `$${totalCost.toFixed(2)}/yd`, icon: DollarSign },
+        { label: "Yarn Index", value: "Cotton +2.3%", change: "+2.3% 전주 대비", positive: false, icon: TrendingUp },
+        { label: "계산 정확도", value: "±1%", icon: Activity },
+        { label: "환율", value: "1,350 KRW/USD", icon: BarChart3 },
+      ]} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Input Specs</h3>
+            <div className="space-y-3">
+              {[
+                { label: "Fabric Type", value: "Single Jersey" },
+                { label: "Composition", value: "Cotton 95% / Span 5%" },
+                { label: "Weight (GSM)", value: "180" },
+                { label: "Width (Inch)", value: "60" },
+                { label: "Dyeing Method", value: "Reactive Dyeing" },
+              ].map((f) => (
+                <div key={f.label}>
+                  <p className="text-[10px] text-gray-400 font-medium mb-1">{f.label}</p>
+                  <div className="px-3 py-2 rounded bg-gray-50 border border-gray-200 text-sm text-gray-800">{f.value}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm lg:col-span-2">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Cost Breakdown (USD/yd)</h3>
+            <table className="w-full text-sm mb-4">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-2 text-xs text-gray-500 font-medium">항목</th>
+                  <th className="text-left py-2 text-xs text-gray-500 font-medium">상세 내역</th>
+                  <th className="text-right py-2 text-xs text-gray-500 font-medium">단가</th>
+                </tr>
+              </thead>
+              <tbody>
+                {costItems.map((c) => (
+                  <tr key={c.item} className="border-b border-gray-50">
+                    <td className="py-3 font-medium text-gray-900">{c.item}</td>
+                    <td className="py-3 text-gray-600">{c.detail}</td>
+                    <td className="py-3 text-right font-medium text-gray-900">${c.cost.toFixed(2)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <Card className="border-0 bg-gray-50">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="w-7 h-7 rounded bg-blue-100 flex items-center justify-center flex-shrink-0 text-sm">💡</div>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  베트남 공장 소싱 시 물류비 절감으로 전체 단가 <strong>$0.15</strong> 추가 인하 가능합니다.
+                </p>
+              </CardContent>
+            </Card>
+
+            <div className="mt-4 p-4 rounded-xl bg-hansae-navy flex items-center justify-between">
+              <span className="text-sm font-semibold text-gray-100">Estimated Total Cost</span>
+              <span className="text-2xl font-black text-red-400">${totalCost.toFixed(2)} / yd</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <OutputFile name={config.outputFile} size={config.outputSize} />
+    </>
+  )
+}
+
+/* =================================================================
+   Dashboard: Tech Pack (4-9)
+   ================================================================= */
+
+function TechPackDashboard({ config }: { config: AgentConfig }) {
+  const bomItems = [
+    { label: "Main Fabric", value: "100% Cotton Jersey" },
+    { label: "Color Way", value: "Navy, Heather Gray, White" },
+    { label: "Trim: Zipper", value: "YKK 5# Nylon Reverse" },
+    { label: "Thread", value: "60/3 Spun Polyester" },
+    { label: "Stitch Type", value: "301 Lockstitch" },
+    { label: "Label", value: "Woven Main + Care Label" },
+    { label: "Packaging", value: "Polybag + Carton Box" },
+  ]
+
+  return (
+    <>
+      <KpiGrid items={[
+        { label: "분석 페이지", value: "12p", icon: FileText },
+        { label: "추출 항목", value: `${bomItems.length}개`, icon: Package },
+        { label: "Confidence", value: "98.5%", icon: Activity },
+        { label: "바이어", value: "GAP / Old Navy", icon: Layers },
+      ]} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Original Document</h3>
+            <div className="relative rounded-lg bg-gray-100 border border-gray-200 h-[320px] flex items-center justify-center overflow-hidden">
+              <span className="text-6xl">👕</span>
+              <div className="absolute top-3 right-3 text-[10px] bg-white/80 px-2 py-1 rounded">Page 1 / 12</div>
+              <div className="absolute left-0 w-full h-0.5 bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse" style={{ top: "40%" }} />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Extracted BOM & Specs</h3>
+            <div className="space-y-2.5">
+              {bomItems.map((item) => (
+                <div key={item.label} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 border-l-[3px] border-red-500">
+                  <span className="text-xs text-gray-500 font-medium">{item.label}</span>
+                  <span className="text-sm font-bold text-gray-900">{item.value}</span>
+                </div>
+              ))}
+            </div>
+
+            <Card className="border-0 bg-blue-50 mt-4">
+              <CardContent className="p-4 flex items-start gap-3">
+                <div className="w-7 h-7 rounded bg-blue-500 flex items-center justify-center flex-shrink-0 text-sm text-white">🔍</div>
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  BOM 내 <strong>&apos;YKK Zipper&apos;</strong> 사양이 이전 시즌 대비 15% 단가 상승되었습니다. 대체 부자재 확인이 필요합니다.
+                </p>
+              </CardContent>
+            </Card>
+          </CardContent>
+        </Card>
+      </div>
+      <OutputFile name={config.outputFile} size={config.outputSize} />
+    </>
+  )
+}
+
+/* =================================================================
+   Dashboard: Buyer Email (4-10)
+   ================================================================= */
+
+function BuyerEmailDashboard({ config }: { config: AgentConfig }) {
+  const emails = [
+    { subject: "Urgent: Shipment Delay for PO #829103", from: "Target Buyer", time: "10:30 AM", active: true },
+    { subject: "Sample Approval Request - Style TS-102", from: "Gap Sourcing", time: "09:15 AM", active: false },
+    { subject: "Quarterly Business Review Invitation", from: "Walmart Global", time: "Yesterday", active: false },
+  ]
+
+  return (
+    <>
+      <KpiGrid items={[
+        { label: "미처리 메일", value: "12건", icon: FileText },
+        { label: "AI 답변 생성", value: "3건", icon: Activity },
+        { label: "평균 응답시간", value: "1.2s", icon: BarChart3 },
+        { label: "언어 지원", value: "EN/KO/CN", icon: Layers },
+      ]} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Email list */}
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-0">
+            <div className="px-4 py-3 border-b border-gray-100">
+              <h3 className="text-sm font-bold text-gray-900">Inbox (12)</h3>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {emails.map((e) => (
+                <div key={e.subject} className={cn("px-4 py-3 cursor-pointer hover:bg-gray-50", e.active && "bg-gray-50 border-l-[3px] border-red-500")}>
+                  <p className="text-sm font-bold text-gray-900 mb-1 truncate">{e.subject}</p>
+                  <div className="flex items-center justify-between text-[10px] text-gray-400">
+                    <span>{e.from}</span>
+                    <span>{e.time}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Email content + AI draft */}
+        <Card className="border-0 shadow-sm lg:col-span-2">
+          <CardContent className="p-0">
+            <div className="px-5 py-4 border-b border-gray-100">
+              <h3 className="text-base font-bold text-gray-900 mb-1">Urgent: Shipment Delay for PO #829103</h3>
+              <p className="text-xs text-gray-500">From: <strong>Sarah Jenkins (Target)</strong> | To: <strong>Hansae Sales Team</strong></p>
+            </div>
+            <div className="px-5 py-4 text-sm text-gray-700 leading-relaxed border-b border-gray-100">
+              <p>Dear Hansae Team,</p>
+              <br />
+              <p>We noticed that the shipment for PO #829103 is currently marked as delayed in the portal. Could you please provide an updated ETD and the reason for this delay? This is a priority style for our upcoming summer campaign.</p>
+              <br />
+              <p>Best regards,<br />Sarah</p>
+            </div>
+
+            <div className="m-5 p-5 rounded-xl bg-gray-50 border border-red-200">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-red-600 flex items-center gap-1.5">✨ AI Generated Draft (Professional Tone)</span>
+                <Button size="sm" className="bg-hansae-navy hover:bg-hansae-navy-light text-xs h-7">Apply to Reply</Button>
+              </div>
+              <div className="p-4 rounded-lg bg-white border border-gray-200 text-sm text-gray-800 leading-relaxed">
+                <p>Dear Sarah,</p>
+                <br />
+                <p>Thank you for your inquiry. Regarding PO #829103, the ETD has been updated to <strong>May 25th</strong> due to a temporary raw material shortage which has now been resolved. We are fast-tracking the production to ensure minimal impact on your campaign.</p>
+                <br />
+                <p>Best regards,<br />Hansae Sales Team</p>
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2">* ERP Data Synced: ETD 2026-05-25, Status: In Production</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <OutputFile name={config.outputFile} size={config.outputSize} />
+    </>
+  )
+}
+
+/* =================================================================
+   Dashboard: Production Line Optimizer (4-11)
+   ================================================================= */
+
+function ProductionOptimizerDashboard({ config }: { config: AgentConfig }) {
+  const lines = [
+    { name: "Line A-01 (T-Shirt)", target: 1200, actual: 1020, pct: 85, warning: false },
+    { name: "Line A-02 (Polo)", target: 800, actual: 360, pct: 45, warning: true, bottleneck: "Sewing Step 3" },
+    { name: "Line B-01 (Jacket)", target: 500, actual: 460, pct: 92, warning: false },
+    { name: "Line B-02 (Pants)", target: 1000, actual: 780, pct: 78, warning: false },
+  ]
+
+  return (
+    <>
+      <KpiGrid items={[
+        { label: "가동 라인", value: "12개", icon: Factory },
+        { label: "Overall Efficiency", value: "84.5%", change: "+2.4% vs 어제", positive: true, icon: Activity },
+        { label: "병목 라인", value: "1개", icon: AlertTriangle },
+        { label: "Shift", value: "Day (08:00-17:00)", icon: Layers },
+      ]} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="border-0 shadow-sm lg:col-span-2">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Active Lines (12)</h3>
+            <div className="grid grid-cols-2 gap-4">
+              {lines.map((line) => (
+                <div
+                  key={line.name}
+                  className={cn(
+                    "p-4 rounded-lg border",
+                    line.warning ? "border-amber-300 bg-amber-50" : "border-gray-200 bg-white"
+                  )}
+                >
+                  <p className="text-sm font-bold text-gray-900 mb-2">{line.name}</p>
+                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                    <div
+                      className={cn("h-full rounded-full", line.warning ? "bg-amber-500" : "bg-red-500")}
+                      style={{ width: `${line.pct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-gray-500">
+                    <span>Target: {line.target.toLocaleString()}</span>
+                    <span className={cn(line.warning && "text-amber-600 font-bold")}>
+                      Actual: {line.actual.toLocaleString()}
+                    </span>
+                  </div>
+                  {line.bottleneck && (
+                    <p className="text-[10px] text-amber-600 mt-2 font-medium">⚠️ Bottleneck: {line.bottleneck}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">AI Optimization Result</h3>
+            <div className="p-4 rounded-lg bg-green-50 border border-green-200 mb-4">
+              <p className="text-xs font-bold text-green-800 mb-1">추천 조치 사항</p>
+              <p className="text-xs text-green-700 leading-relaxed">
+                Line A-02의 병목 현상 해결을 위해 <strong>Line B-02의 유휴 인력 2명</strong>을 즉시 재배치할 것을 권장합니다. 예상 효율 개선: <strong>+12%</strong>
+              </p>
+            </div>
+            <div className="mt-auto">
+              <p className="text-xs text-gray-500 font-medium mb-1">Overall Efficiency</p>
+              <p className="text-3xl font-black text-gray-900">84.5%</p>
+              <p className="text-xs text-emerald-600 font-semibold mt-1">▲ 2.4% from yesterday</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <OutputFile name={config.outputFile} size={config.outputSize} />
+    </>
+  )
+}
+
+/* =================================================================
+   Dashboard: QC Vision (4-12)
+   ================================================================= */
+
+function QcVisionDashboard({ config }: { config: AgentConfig }) {
+  const defects = [
+    { type: "Stain (오염)", confidence: 99.2 },
+    { type: "Seam Puckering (봉제)", confidence: 96.5 },
+    { type: "Hole (구멍)", confidence: 98.8 },
+    { type: "Shading (이색)", confidence: 94.1 },
+  ]
+  const defectTypes = [
+    { name: "Stain", pct: 42, color: "bg-red-500" },
+    { name: "Seam", pct: 28, color: "bg-blue-500" },
+    { name: "Hole", pct: 15, color: "bg-emerald-500" },
+    { name: "Shading", pct: 10, color: "bg-amber-500" },
+    { name: "Others", pct: 5, color: "bg-gray-400" },
+  ]
+
+  return (
+    <>
+      <KpiGrid items={[
+        { label: "총 검사수", value: "4,281", icon: Activity },
+        { label: "불량 탐지", value: "12건 (0.28%)", icon: AlertTriangle },
+        { label: "모델 정확도", value: "98.5%", icon: BarChart3 },
+        { label: "카메라", value: "4대 Online", icon: Layers },
+      ]} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Recent Defects Found</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {defects.map((d) => (
+                <div key={d.type} className="rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="relative h-20 bg-gray-100 flex items-center justify-center text-3xl">
+                    👕
+                    <div className="absolute inset-2 border-2 border-red-500 rounded opacity-40" />
+                  </div>
+                  <div className="p-2.5">
+                    <p className="text-xs font-bold text-red-600">{d.type}</p>
+                    <p className="text-[10px] text-gray-400">Confidence: {d.confidence}%</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Defect Pattern Analysis</h3>
+            <p className="text-xs text-gray-500 mb-3">Top Defect Types</p>
+            <div className="space-y-4 mb-6">
+              {defectTypes.map((d) => (
+                <div key={d.name}>
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-gray-600">{d.name}</span>
+                    <span className="font-medium text-gray-900">{d.pct}%</span>
+                  </div>
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className={cn("h-full rounded-full", d.color)} style={{ width: `${d.pct}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+              <div className="flex items-start gap-2">
+                <span className="text-sm">⚠️</span>
+                <p className="text-xs text-red-700 leading-relaxed">
+                  최근 1시간 동안 <strong>&apos;오염(Stain)&apos;</strong> 불량이 급증했습니다. 원단 롤 #402의 청결 상태를 점검하십시오.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      <OutputFile name={config.outputFile} size={config.outputSize} />
+    </>
+  )
+}
+
+/* =================================================================
+   Dashboard: Logistics Tracker (4-13)
+   ================================================================= */
+
+function LogisticsDashboard({ config }: { config: AgentConfig }) {
+  const shipments = [
+    { id: "SHP-2026-0519-A", route: "HCM → Long Beach", eta: "2026-06-05", status: "on-track" as const, detail: "Stable" },
+    { id: "SHP-2026-0518-B", route: "Haiphong → Savannah", eta: "2026-06-12 (+3d)", status: "delayed" as const, detail: "Storm" },
+  ]
+
+  return (
+    <>
+      <KpiGrid items={[
+        { label: "Active Vessels", value: "142", icon: Package },
+        { label: "Active Flights", value: "28", icon: Truck },
+        { label: "On Track", value: "89%", change: "-2.1% 전주 대비", positive: false, icon: Activity },
+        { label: "ETA 정확도", value: "95%", icon: BarChart3 },
+      ]} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="border-0 shadow-sm lg:col-span-2">
+          <CardContent className="p-5">
+            <h3 className="text-sm font-bold text-gray-900 mb-4 pb-3 border-b border-gray-100">Real-time Route Tracking</h3>
+            <div className="relative rounded-lg bg-sky-50 border border-sky-200 h-[320px] flex items-center justify-center overflow-hidden">
+              <span className="text-7xl opacity-40">🌍</span>
+              <div className="absolute text-xs font-bold text-red-600" style={{ top: "40%", left: "25%" }}>Vietnam</div>
+              <div className="absolute text-xs font-bold text-red-600" style={{ top: "25%", left: "72%" }}>USA</div>
+              <div className="absolute text-3xl animate-bounce" style={{ top: "35%", left: "50%" }}>🚢</div>
+              <div className="absolute bottom-3 left-3 bg-white/80 px-3 py-1.5 rounded text-[10px] text-gray-600">
+                AIS Data: Live | Weather API: Connected
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardContent className="p-5 flex flex-col gap-4">
+            <h3 className="text-sm font-bold text-gray-900 pb-3 border-b border-gray-100">Urgent Shipments</h3>
+            {shipments.map((s) => (
+              <div
+                key={s.id}
+                className={cn(
+                  "p-4 rounded-lg border",
+                  s.status === "delayed" ? "border-red-200 bg-red-50" : "border-gray-200 bg-white"
+                )}
+              >
+                <p className="text-sm font-bold text-gray-900">{s.id}</p>
+                <Badge
+                  className={cn(
+                    "text-[10px] mt-1",
+                    s.status === "on-track"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : "bg-red-50 text-red-700 border-red-200"
+                  )}
+                  variant="outline"
+                >
+                  {s.status === "on-track" ? "On Track" : `Delayed (${s.detail})`}
+                </Badge>
+                <p className="text-[10px] text-gray-500 mt-2 leading-relaxed">
+                  Route: {s.route}<br />
+                  ETA: {s.status === "delayed" ? (
+                    <span className="text-red-600 font-bold">{s.eta}</span>
+                  ) : (
+                    <span>{s.eta} ({s.detail})</span>
+                  )}
+                </p>
+              </div>
+            ))}
+
+            <Card className="border-0 bg-gray-50 mt-auto">
+              <CardContent className="p-4 flex items-start gap-3">
+                <span className="text-sm">💡</span>
+                <p className="text-xs text-gray-600 leading-relaxed">
+                  지연된 <strong>SHP-0518-B</strong> 건의 긴급 물량은 <strong>항공 운송(Air Freight)</strong>으로 전환하여 납기를 맞출 것을 권장합니다.
+                </p>
+              </CardContent>
+            </Card>
+          </CardContent>
+        </Card>
+      </div>
+      <OutputFile name={config.outputFile} size={config.outputSize} />
+    </>
+  )
+}
+
+/* =================================================================
    Router + Main Page
    ================================================================= */
 
@@ -1096,6 +1708,12 @@ function DashboardRouter({ slug, config }: { slug: string; config: AgentConfig }
     case "prod-inspection": return <InspectionDashboard config={config} />
     case "prod-erp-monitor": return <ErpMonitorDashboard config={config} />
     case "bi-daily": return <BiDashboard config={config} />
+    case "fabric-cost-calculator": return <FabricCostDashboard config={config} />
+    case "design-techpack": return <TechPackDashboard config={config} />
+    case "comm-buyer-email": return <BuyerEmailDashboard config={config} />
+    case "prod-line-optimizer": return <ProductionOptimizerDashboard config={config} />
+    case "prod-qc-vision": return <QcVisionDashboard config={config} />
+    case "logistics-tracker": return <LogisticsDashboard config={config} />
     default: return <div className="p-8 text-center text-gray-500">대시보드를 준비 중입니다</div>
   }
 }
