@@ -15,7 +15,6 @@ import { SecurityBadge } from "@/components/shared/security-badge"
 import { AgentGroupIcon, AGENT_GROUPS } from "@/components/shared/agent-group-icon"
 import {
   Search, Star, StarOff, Lock, ArrowRight, Bot,
-  ExternalLink
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -176,7 +175,6 @@ function AgentCardItem({
   onToggleFavorite: (id: string, isFav: boolean) => void
 }) {
   const isLocked = !agent.demoRunnable
-  const isRedirect = agent.runtimeType === "STREAMLIT_HOST" || agent.runtimeType === "BI_CONNECTOR"
 
   return (
     <Card className="border-0 shadow-sm hover:shadow-md transition-all group relative overflow-hidden">
@@ -236,15 +234,9 @@ function AgentCardItem({
             <span>실행 {agent.runCount}회</span>
           </div>
           {!isLocked && (
-            <Link
-              href={isRedirect ? `/apps/${agent.slug}` : `/run?slug=${agent.slug}`}
-            >
+            <Link href={`/apps/${agent.slug}`}>
               <Button size="sm" variant="ghost" className="h-7 gap-1 text-xs text-hansae-navy">
-                {isRedirect ? (
-                  <>열기 <ExternalLink className="w-3 h-3" /></>
-                ) : (
-                  <>실행 <ArrowRight className="w-3 h-3" /></>
-                )}
+                실행 <ArrowRight className="w-3 h-3" />
               </Button>
             </Link>
           )}

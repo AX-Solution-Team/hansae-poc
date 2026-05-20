@@ -11,7 +11,7 @@ import { SecurityBadge } from "@/components/shared/security-badge"
 import { AgentGroupIcon } from "@/components/shared/agent-group-icon"
 import { PageContent } from "@/components/layout/app-shell"
 import {
-  ArrowLeft, Play, GitFork, ExternalLink,
+  ArrowLeft, Play, GitFork,
   BarChart3, Lock, Building2, ArrowRightLeft, Workflow,
   CheckCircle2
 } from "lucide-react"
@@ -99,7 +99,6 @@ export default function MarketplaceDetailPage() {
     )
   }
 
-  const isRedirect = agent.runtimeType === "STREAMLIT_HOST" || agent.runtimeType === "BI_CONNECTOR"
   const workflowSteps = agent.workflowMd?.split("\n").filter(Boolean) || []
 
   return (
@@ -140,13 +139,9 @@ export default function MarketplaceDetailPage() {
               복제
             </Button>
             {agent.demoRunnable ? (
-              <Link href={isRedirect ? `/apps/${agent.slug}` : `/run?slug=${agent.slug}`}>
+              <Link href={`/apps/${agent.slug}`}>
                 <Button className="gap-1.5 bg-hansae-navy hover:bg-hansae-navy-light">
-                  {isRedirect ? (
-                    <><ExternalLink className="w-4 h-4" /> 앱 열기</>
-                  ) : (
-                    <><Play className="w-4 h-4" /> 실행하기</>
-                  )}
+                  <Play className="w-4 h-4" /> 실행하기
                 </Button>
               </Link>
             ) : (
