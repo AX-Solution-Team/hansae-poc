@@ -460,10 +460,10 @@ function DashboardHeader({ config, onRerun }: { config: AgentConfig; onRerun: ()
    ================================================================= */
 
 const TREND_PRODUCTS = [
-  { name: "Oversized Linen Blend Blazer", price: "€79.90", emoji: "🧥", tag: "Best Seller", tags: ["Linen", "Oversized", "Natural Tone"], weeks: [{ w: "W18", h: 80 }, { w: "W19", h: 80 }, { w: "W20", h: 60 }, { w: "W21", h: 60 }], desc: "린넨 혼방 소재의 오버사이즈 핏. 내추럴 톤의 버튼 디테일이 특징." },
-  { name: "Printed Satin Effect Dress", price: "€45.95", emoji: "👗", tag: "New Entry", tags: ["Satin", "Geometric", "V-Neck"], weeks: [{ w: "W18", h: 0 }, { w: "W19", h: 0 }, { w: "W20", h: 40 }, { w: "W21", h: 75 }], desc: "기하학적 프린트의 새틴 소재 드레스. V넥 라인과 롱 슬리브." },
-  { name: "Wide Leg Cropped Jeans", price: "€39.95", emoji: "👖", tag: "Trending", tags: ["Denim", "Wide Leg", "Cropped"], weeks: [{ w: "W18", h: 50 }, { w: "W19", h: 60 }, { w: "W20", h: 70 }, { w: "W21", h: 85 }], desc: "와이드 레그 크롭 핏 데님. 하이웨이스트 디자인." },
-  { name: "Ribbed Knit Tank Top", price: "€19.95", emoji: "👕", tag: "Steady", tags: ["Ribbed", "Knit", "Basic"], weeks: [{ w: "W18", h: 70 }, { w: "W19", h: 65 }, { w: "W20", h: 68 }, { w: "W21", h: 72 }], desc: "립 니트 소재의 베이직 탱크탑. 슬림 핏 실루엣." },
+  { name: "Oversized Linen Blend Blazer", price: "€79.90", colorSwatch: "#C4A882", colorName: "Sand Beige", fabric: "Linen 55% / Cotton 45%", tag: "Best Seller", tags: ["Linen", "Oversized", "Natural Tone"], weeks: [{ w: "W18", h: 80 }, { w: "W19", h: 80 }, { w: "W20", h: 60 }, { w: "W21", h: 60 }], desc: "린넨 혼방 소재의 오버사이즈 핏. 내추럴 톤의 버튼 디테일이 특징.", cat: "Outerwear" },
+  { name: "Printed Satin Effect Dress", price: "€45.95", colorSwatch: "#8B4573", colorName: "Mauve", fabric: "Polyester 100% (Satin)", tag: "New Entry", tags: ["Satin", "Geometric", "V-Neck"], weeks: [{ w: "W18", h: 0 }, { w: "W19", h: 0 }, { w: "W20", h: 40 }, { w: "W21", h: 75 }], desc: "기하학적 프린트의 새틴 소재 드레스. V넥 라인과 롱 슬리브.", cat: "Dress" },
+  { name: "Wide Leg Cropped Jeans", price: "€39.95", colorSwatch: "#5B7FA5", colorName: "Medium Wash", fabric: "Cotton 98% / Elastane 2%", tag: "Trending", tags: ["Denim", "Wide Leg", "Cropped"], weeks: [{ w: "W18", h: 50 }, { w: "W19", h: 60 }, { w: "W20", h: 70 }, { w: "W21", h: 85 }], desc: "와이드 레그 크롭 핏 데님. 하이웨이스트 디자인.", cat: "Bottom" },
+  { name: "Ribbed Knit Tank Top", price: "€19.95", colorSwatch: "#F5F0E8", colorName: "Off White", fabric: "Cotton 95% / Spandex 5%", tag: "Steady", tags: ["Ribbed", "Knit", "Basic"], weeks: [{ w: "W18", h: 70 }, { w: "W19", h: 65 }, { w: "W20", h: 68 }, { w: "W21", h: 72 }], desc: "립 니트 소재의 베이직 탱크탑. 슬림 핏 실루엣.", cat: "Top" },
 ]
 
 function DesignCrawlDashboard({ brand, config }: { brand: string; config: AgentConfig }) {
@@ -488,8 +488,15 @@ function DesignCrawlDashboard({ brand, config }: { brand: string; config: AgentC
       <div className="grid grid-cols-2 gap-4">
         {TREND_PRODUCTS.map((tp) => (
           <Card key={tp.name} className="border-0 shadow-sm overflow-hidden">
-            <div className="h-[100px] bg-gray-100 flex items-center justify-center relative">
-              <span className="text-5xl">{tp.emoji}</span>
+            <div className="h-[100px] bg-gray-50 flex items-center gap-4 px-4 relative">
+              <div className="w-16 h-16 rounded-lg border border-gray-200 flex items-center justify-center flex-shrink-0" style={{ background: `linear-gradient(135deg, ${tp.colorSwatch}33, ${tp.colorSwatch}88)` }}>
+                <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm" style={{ backgroundColor: tp.colorSwatch }} />
+              </div>
+              <div className="min-w-0">
+                <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{tp.cat}</span>
+                <p className="text-[10px] text-gray-600 mt-0.5">{tp.fabric}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">{tp.colorName}</p>
+              </div>
               <span className="absolute top-2 left-2 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded">{tp.tag}</span>
             </div>
             <CardContent className="p-4 space-y-2">
@@ -522,7 +529,9 @@ function DesignCrawlDashboard({ brand, config }: { brand: string; config: AgentC
 
       <Card className="border-0 shadow-sm bg-gray-50">
         <CardContent className="p-4 flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-hansae-navy flex items-center justify-center flex-shrink-0 text-sm">📊</div>
+          <div className="w-8 h-8 rounded-lg bg-hansae-navy flex items-center justify-center flex-shrink-0">
+            <BarChart3 className="w-4 h-4 text-white" />
+          </div>
           <div>
             <p className="text-xs font-bold text-gray-900">시장 분석 인사이트</p>
             <p className="text-[11px] text-gray-600 mt-1 leading-relaxed">
@@ -780,7 +789,7 @@ function PoRecapDashboard({ slug, config }: { slug: string; config: AgentConfig 
           <Card className="border-0 shadow-sm bg-gray-50">
             <CardContent className="p-4 flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-hansae-navy flex items-center justify-center flex-shrink-0">
-                <span className="text-sm">✨</span>
+                <Bot className="w-4 h-4 text-white" />
               </div>
               <div>
                 <p className="text-xs font-bold text-gray-900">AI Mapping Note</p>
@@ -1377,16 +1386,27 @@ function FabricCostDashboard({ config }: { config: AgentConfig }) {
    Dashboard: Tech Pack (4-9)
    ================================================================= */
 
+const TP_ICONS: Record<string, React.ElementType> = {
+  Cover: ClipboardCheck,
+  "Flat Sketch": Ruler,
+  "Fabric Spec": Layers,
+  "Color Way": Tag,
+  "Trim Detail": Package,
+  "Stitch Spec": Activity,
+  "Label & Packaging": ShoppingBag,
+  Measurement: Ruler,
+}
+
 function TechPackDashboard({ config }: { config: AgentConfig }) {
   const PAGES = [
-    { page: 1, section: "Cover", icon: "📋" },
-    { page: 2, section: "Flat Sketch", icon: "✏️" },
-    { page: 3, section: "Fabric Spec", icon: "🧵" },
-    { page: 4, section: "Color Way", icon: "🎨" },
-    { page: 5, section: "Trim Detail", icon: "🔩" },
-    { page: 6, section: "Stitch Spec", icon: "🪡" },
-    { page: 7, section: "Label & Packaging", icon: "🏷️" },
-    { page: 8, section: "Measurement", icon: "📐" },
+    { page: 1, section: "Cover" },
+    { page: 2, section: "Flat Sketch" },
+    { page: 3, section: "Fabric Spec" },
+    { page: 4, section: "Color Way" },
+    { page: 5, section: "Trim Detail" },
+    { page: 6, section: "Stitch Spec" },
+    { page: 7, section: "Label & Packaging" },
+    { page: 8, section: "Measurement" },
   ]
   const BOM_ITEMS = [
     { category: "Shell Fabric", item: "100% Cotton Jersey", spec: "180GSM, 60\"", supplier: "Texhong Vietnam", unitCost: 3.20, confidence: 99.1, page: 3 },
@@ -1425,7 +1445,7 @@ function TechPackDashboard({ config }: { config: AgentConfig }) {
               <span className="text-[10px] bg-gray-100 px-2 py-1 rounded font-medium">Page {PAGES[currentPage].page} / {PAGES.length}</span>
             </div>
             <div className="relative rounded-lg bg-gray-50 border border-gray-200 h-[280px] flex flex-col items-center justify-center overflow-hidden">
-              <span className="text-5xl mb-2">{PAGES[currentPage].icon}</span>
+              {(() => { const Icon = TP_ICONS[PAGES[currentPage].section] || FileText; return <Icon className="w-10 h-10 text-gray-400 mb-2" /> })()}
               <p className="text-sm font-bold text-gray-700">{PAGES[currentPage].section}</p>
               <p className="text-[10px] text-gray-400 mt-1">GAP / Old Navy — Style #ON-FW26-0042</p>
               {currentBoms.length > 0 && (
@@ -1440,7 +1460,7 @@ function TechPackDashboard({ config }: { config: AgentConfig }) {
             <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
               {PAGES.map((p, i) => (
                 <button key={p.page} onClick={() => setCurrentPage(i)} className={cn("flex-shrink-0 w-16 h-16 rounded-lg border text-center flex flex-col items-center justify-center gap-0.5 transition-all", i === currentPage ? "border-red-500 bg-red-50" : "border-gray-200 hover:bg-gray-50")}>
-                  <span className="text-lg">{p.icon}</span>
+                  {(() => { const Icon = TP_ICONS[p.section] || FileText; return <Icon className={cn("w-4 h-4", i === currentPage ? "text-red-500" : "text-gray-400")} /> })()}
                   <span className="text-[8px] text-gray-500 leading-tight">{p.section}</span>
                 </button>
               ))}
@@ -1637,7 +1657,7 @@ function BuyerEmailDashboard({ config }: { config: AgentConfig }) {
 
             <div className="m-5 p-5 rounded-xl bg-gray-50 border border-red-200">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-bold text-red-600 flex items-center gap-1.5">✨ AI Generated Draft</span>
+                <span className="text-sm font-bold text-red-600 flex items-center gap-1.5"><Bot className="w-4 h-4" /> AI Generated Draft</span>
                 <div className="flex items-center gap-1.5">
                   {TONES.map((tone) => (
                     <button key={tone} onClick={() => handleToneChange(tone)} className={cn("px-2.5 py-1 rounded text-[10px] font-medium transition-all", tone === selectedTone ? "bg-hansae-navy text-white" : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-100")}>{tone}</button>

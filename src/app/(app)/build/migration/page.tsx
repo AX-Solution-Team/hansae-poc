@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, ArrowRight, FileText, Package, Mail, Factory, BarChart3 } from "lucide-react"
+import { ArrowLeft, ArrowRight, FileText, Package, Mail, Factory, BarChart3, Shirt, Search, FileCheck, TrendingUp } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const STEPS = [
@@ -13,15 +13,15 @@ const STEPS = [
   { step: 4, label: "Marketplace Deploy" },
 ]
 
-const ASSETS = [
-  { name: "바이어 PO 오더리캡 자동 생성", tech: "pdfplumber, openpyxl", icon: "📄", status: "completed", agentId: "#AG-001" },
-  { name: "ZARA 바이어 제품 정보 크롤러", tech: "Selenium, BeautifulSoup", icon: "👗", status: "completed", agentId: "#AG-002" },
-  { name: "Target 부자재 발주서 자동생성", tech: "Streamlit, Pandas", icon: "📦", status: "in-progress", note: "Wrapping SDK..." },
-  { name: "이메일 검색 및 자료 다운로드", tech: "Win32com, Outlook API", icon: "📧", status: "in-progress", note: "Testing AI Logic..." },
-  { name: "ERP 생산현황 활용 및 알림", tech: "Python, RPA Connect", icon: "🏭", status: "ready" },
-  { name: "재고 분석 및 비즈니스 인사이트", tech: "Pandas, Plotly", icon: "📊", status: "ready" },
-  { name: "POCN 확인서 자동 생성", tech: "pdfplumber, difflib", icon: "📝", status: "completed", agentId: "#AG-003" },
-  { name: "주간 매출 리포트 자동화", tech: "openpyxl, Jinja2", icon: "📈", status: "completed", agentId: "#AG-004" },
+const ASSETS: { name: string; tech: string; icon: React.ElementType; iconBg: string; iconColor: string; status: string; agentId?: string; note?: string }[] = [
+  { name: "바이어 PO 오더리캡 자동 생성", tech: "pdfplumber, openpyxl", icon: FileText, iconBg: "bg-blue-50", iconColor: "text-blue-600", status: "completed", agentId: "#AG-001" },
+  { name: "ZARA 바이어 제품 정보 크롤러", tech: "Selenium, BeautifulSoup", icon: Search, iconBg: "bg-purple-50", iconColor: "text-purple-600", status: "completed", agentId: "#AG-002" },
+  { name: "Target 부자재 발주서 자동생성", tech: "Streamlit, Pandas", icon: Package, iconBg: "bg-amber-50", iconColor: "text-amber-600", status: "in-progress", note: "Wrapping SDK..." },
+  { name: "이메일 검색 및 자료 다운로드", tech: "Win32com, Outlook API", icon: Mail, iconBg: "bg-emerald-50", iconColor: "text-emerald-600", status: "in-progress", note: "Testing AI Logic..." },
+  { name: "ERP 생산현황 활용 및 알림", tech: "Python, RPA Connect", icon: Factory, iconBg: "bg-gray-100", iconColor: "text-gray-600", status: "ready" },
+  { name: "재고 분석 및 비즈니스 인사이트", tech: "Pandas, Plotly", icon: BarChart3, iconBg: "bg-indigo-50", iconColor: "text-indigo-600", status: "ready" },
+  { name: "POCN 확인서 자동 생성", tech: "pdfplumber, difflib", icon: FileCheck, iconBg: "bg-teal-50", iconColor: "text-teal-600", status: "completed", agentId: "#AG-003" },
+  { name: "주간 매출 리포트 자동화", tech: "openpyxl, Jinja2", icon: TrendingUp, iconBg: "bg-rose-50", iconColor: "text-rose-600", status: "completed", agentId: "#AG-004" },
 ]
 
 export default function MigrationPage() {
@@ -101,8 +101,8 @@ export default function MigrationPage() {
                   asset.status === "ready" && "opacity-60"
                 )}
               >
-                <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center text-2xl flex-shrink-0">
-                  {asset.icon}
+                <div className={cn("w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0", asset.iconBg)}>
+                  <asset.icon className={cn("w-5 h-5", asset.iconColor)} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate">{asset.name}</p>
