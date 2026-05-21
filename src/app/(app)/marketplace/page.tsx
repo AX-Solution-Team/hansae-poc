@@ -163,8 +163,6 @@ export default function MarketplacePage() {
     return result
   }, [agents, query, sidebarSection, tagFilter])
 
-  const totalRuns = agents.reduce((s, a) => s + a.runCount, 0)
-
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* KPI Stats Bar */}

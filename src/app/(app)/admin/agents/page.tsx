@@ -41,9 +41,9 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
 }
 
 const TIER_LABELS: Record<string, string> = {
-  NO_CODE: "No-Code",
-  LOW_CODE: "Low-Code",
-  PRO_CODE: "Pro-Code",
+  NOCODE: "No-Code",
+  LOWCODE: "Low-Code",
+  PROCODE: "Pro-Code",
 }
 
 function formatDate(iso: string): string {

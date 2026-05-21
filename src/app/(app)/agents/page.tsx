@@ -82,12 +82,21 @@ export default function AgentCatalogPage() {
                         "hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
                       )}
                     >
-                      {/* Subtle gradient accent on hover */}
                       <div
-                        className={cn(
-                          "absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300",
-                          config.bgColor.replace("bg-", "bg-gradient-to-r from-") + " to-transparent"
-                        )}
+                        className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{
+                          background: `linear-gradient(to right, ${
+                            ({
+                              "bg-blue-50": "#3b82f6",
+                              "bg-amber-50": "#f59e0b",
+                              "bg-emerald-50": "#10b981",
+                              "bg-purple-50": "#8b5cf6",
+                              "bg-red-50": "#ef4444",
+                              "bg-indigo-50": "#6366f1",
+                              "bg-orange-50": "#f97316",
+                            } as Record<string, string>)[config.bgColor] ?? "#6b7280"
+                          }, transparent)`,
+                        }}
                       />
                       <CardContent className="p-6">
                         <div className="flex items-start justify-between mb-4">
