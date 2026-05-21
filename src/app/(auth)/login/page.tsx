@@ -56,11 +56,12 @@ export default function LoginPage() {
       <div className="hidden lg:flex lg:w-[480px] hansae-gradient flex-col justify-between p-12">
         <div>
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">H</span>
-            </div>
+            <img
+              src="/brand/Hansae-logo.jpg"
+              alt="HANSAE"
+              className="h-10 w-auto rounded bg-white/90 px-2 py-1"
+            />
             <div>
-              <h2 className="text-white font-bold text-lg">HANSAE</h2>
               <p className="text-white/60 text-xs">AI Agent Platform</p>
             </div>
           </div>
@@ -97,13 +98,12 @@ export default function LoginPage() {
         <div className="w-full max-w-[420px]">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl hansae-gradient flex items-center justify-center">
-              <span className="text-white font-bold text-lg">H</span>
-            </div>
-            <div>
-              <h2 className="font-bold text-hansae-navy text-lg">HANSAE</h2>
-              <p className="text-gray-400 text-xs">AI Agent Platform</p>
-            </div>
+            <img
+              src="/brand/Hansae-logo.jpg"
+              alt="HANSAE"
+              className="h-10 w-auto object-contain"
+            />
+            <p className="text-gray-400 text-xs">AI Agent Platform</p>
           </div>
 
           <Card className="border-0 shadow-lg">

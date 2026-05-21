@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
-import Link from "next/link"
 import { PageHeader, PageContent } from "@/components/layout/app-shell"
 import { AgentGroupIcon, AGENT_GROUPS } from "@/components/shared/agent-group-icon"
 import { SecurityBadge } from "@/components/shared/security-badge"
@@ -151,7 +150,8 @@ export default function AgentGroupPage() {
                     {agents.map((agent) => (
                       <TableRow
                         key={agent.id}
-                        className="hover:bg-gray-50/50 transition-colors"
+                        className="hover:bg-gray-50/50 transition-colors cursor-pointer"
+                        onClick={() => router.push(`/agents/${group}/${agent.slug}`)}
                       >
                         <TableCell>
                           <div>
@@ -191,12 +191,17 @@ export default function AgentGroupPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           {agent.demoRunnable ? (
-                            <Link href={`/run?slug=${agent.slug}`}>
-                              <Button size="sm" className="h-8 gap-1.5 text-xs hansae-gradient hover:opacity-90">
-                                <Play className="w-3.5 h-3.5" />
-                                실행
-                              </Button>
-                            </Link>
+                            <Button
+                              size="sm"
+                              className="h-8 gap-1.5 text-xs hansae-gradient hover:opacity-90"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                router.push(`/apps/${agent.slug}`)
+                              }}
+                            >
+                              <Play className="w-3.5 h-3.5" />
+                              실행
+                            </Button>
                           ) : (
                             <Tooltip>
                               <TooltipTrigger asChild>

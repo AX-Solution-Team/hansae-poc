@@ -6,37 +6,37 @@
 
 @layer base {
   :root {
-    /* Hansae Brand Tokens */
-    --hansae-navy: #1E3A5F;
+    /* Hansae Brand Tokens — Gold */
+    --hansae-gold: #9B7B2C;
     --hansae-red: #C41E3A;
-    --hansae-surface: #F5F6F8;
+    --hansae-surface: #F7F6F3;
     --teams-purple: #6264A7;
-    --hansae-navy-light: #2A4D7A;
-    --hansae-navy-dark: #152C49;
+    --hansae-gold-light: #B38F3A;
+    --hansae-gold-dark: #7D6220;
 
-    /* shadcn theme — Hansae branded (HSL values for Tailwind v3) */
-    --background: 220 17.6% 96.7%;
+    /* shadcn theme — Hansae Gold branded (HSL values for Tailwind v3) */
+    --background: 40 15% 97%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 214.2 52% 24.5%;
+    --primary: 43 56% 39%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 40 25% 96%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 214 30% 90%;
-    --accent-foreground: 214.2 52% 24.5%;
+    --muted: 40 25% 96%;
+    --muted-foreground: 40 12% 47%;
+    --accent: 43 30% 91%;
+    --accent-foreground: 43 56% 39%;
     --destructive: 349.9 73.5% 44.3%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 214.2 52% 24.5%;
+    --border: 40 18% 91%;
+    --input: 40 18% 91%;
+    --ring: 43 56% 39%;
     --radius: 0.625rem;
 
-    --chart-1: 214.2 52% 24.5%;
+    --chart-1: 43 56% 39%;
     --chart-2: 349.9 73.5% 44.3%;
     --chart-3: 238.3 28.2% 52%;
     --chart-4: 160 40% 50%;
@@ -44,12 +44,12 @@
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 214.2 52% 24.5%;
+    --sidebar-primary: 43 56% 39%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 30% 93%;
-    --sidebar-accent-foreground: 214.2 52% 24.5%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 214.2 52% 24.5%;
+    --sidebar-accent: 43 30% 93%;
+    --sidebar-accent-foreground: 43 56% 39%;
+    --sidebar-border: 40 13% 91%;
+    --sidebar-ring: 43 56% 39%;
   }
 
   .dark {
@@ -59,34 +59,34 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 214 50% 55%;
+    --primary: 43 56% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 214 35% 25%;
-    --accent-foreground: 210 40% 98%;
+    --secondary: 40 20% 17.5%;
+    --secondary-foreground: 40 30% 98%;
+    --muted: 40 20% 17.5%;
+    --muted-foreground: 40 15% 65%;
+    --accent: 43 35% 25%;
+    --accent-foreground: 40 30% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 214 50% 55%;
+    --border: 40 20% 17.5%;
+    --input: 40 20% 17.5%;
+    --ring: 43 56% 55%;
 
-    --chart-1: 214 50% 55%;
+    --chart-1: 43 56% 55%;
     --chart-2: 0 62.8% 50%;
     --chart-3: 238 28% 60%;
     --chart-4: 160 40% 55%;
     --chart-5: 40 60% 60%;
 
     --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 214 50% 55%;
+    --sidebar-foreground: 40 30% 98%;
+    --sidebar-primary: 43 56% 55%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 214 35% 25%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 214 50% 55%;
+    --sidebar-accent: 43 35% 25%;
+    --sidebar-accent-foreground: 40 30% 98%;
+    --sidebar-border: 40 20% 17.5%;
+    --sidebar-ring: 43 56% 55%;
   }
 }
 
@@ -114,11 +114,11 @@
   }
 
   .hansae-gradient {
-    background: linear-gradient(135deg, #1E3A5F 0%, #2A4D7A 100%);
+    background: linear-gradient(135deg, #7D6220 0%, #B38F3A 100%);
   }
 
   .hansae-gradient-text {
-    background: linear-gradient(135deg, #1E3A5F 0%, #2A4D7A 100%);
+    background: linear-gradient(135deg, #9B7B2C 0%, #B38F3A 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

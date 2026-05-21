@@ -19,9 +19,11 @@ export function AuthenticatedLayout({ children }: { children: React.ReactNode })
     return (
       <div className="flex items-center justify-center h-screen bg-hansae-surface">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-lg hansae-gradient flex items-center justify-center animate-pulse-subtle">
-            <span className="text-white font-bold text-lg">H</span>
-          </div>
+          <img
+            src="/brand/Hansae-logo.jpg"
+            alt="HANSAE"
+            className="h-10 w-auto object-contain animate-pulse-subtle"
+          />
           <p className="text-sm text-gray-500">로딩 중...</p>
         </div>
       </div>

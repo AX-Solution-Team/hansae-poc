@@ -103,15 +103,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           {/* Logo */}
           <div className="flex items-center h-16 px-4 border-b border-gray-100">
             <Link href="/" className="flex items-center gap-3 min-w-0">
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg hansae-gradient flex items-center justify-center">
-                <span className="text-white font-bold text-sm">H</span>
-              </div>
-              {!collapsed && (
-                <div className="min-w-0 animate-fade-in">
-                  <h1 className="text-sm font-bold text-hansae-navy truncate">
-                    AI Agent Platform
-                  </h1>
-                  <p className="text-[10px] text-gray-400 truncate">HANSAE</p>
+              {collapsed ? (
+                <div className="flex-shrink-0 w-8 h-8 rounded-lg hansae-gradient flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">H</span>
+                </div>
+              ) : (
+                <div className="min-w-0 animate-fade-in flex items-center gap-3">
+                  <img
+                    src="/brand/Hansae-logo.jpg"
+                    alt="HANSAE"
+                    className="h-9 w-auto object-contain"
+                  />
+                  <div className="min-w-0">
+                    <h1 className="text-xs font-bold text-hansae-navy truncate">
+                      AI Agent Platform
+                    </h1>
+                  </div>
                 </div>
               )}
             </Link>

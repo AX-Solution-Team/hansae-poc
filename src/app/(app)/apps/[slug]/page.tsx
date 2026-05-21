@@ -814,7 +814,7 @@ function PoRecapDashboard({ slug, config }: { slug: string; config: AgentConfig 
                 <XAxis dataKey="style" tick={{ fontSize: 10, fill: "#9ca3af" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={TT} formatter={(v) => [Number(v).toLocaleString(), "수량"]} />
-                <Bar dataKey="qty" fill="#1E3A5F" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="qty" fill="#9B7B2C" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -949,7 +949,7 @@ function TrimDashboard({ config }: { config: AgentConfig }) {
                 <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
                 <Tooltip contentStyle={TT} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="ordered" name="발주" fill="#1E3A5F" radius={[4, 4, 0, 0]} maxBarSize={20} />
+                <Bar dataKey="ordered" name="발주" fill="#9B7B2C" radius={[4, 4, 0, 0]} maxBarSize={20} />
                 <Bar dataKey="received" name="입고" fill="#10B981" radius={[4, 4, 0, 0]} maxBarSize={20} />
               </BarChart>
             </ResponsiveContainer>
@@ -988,7 +988,7 @@ function SalesDashboard({ config }: { config: AgentConfig }) {
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={{ stroke: "#e5e7eb" }} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={50} />
                 <Tooltip contentStyle={TT} formatter={(v) => [`${Number(v).toLocaleString()} 만원`, "매출"]} />
-                <Bar dataKey="value" fill="#1E3A5F" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="value" fill="#9B7B2C" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -1031,7 +1031,7 @@ function StockAlertDashboard({ config }: { config: AgentConfig }) {
                 <YAxis domain={["dataMin - 500", "dataMax + 500"]} tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} width={55} />
                 <Tooltip contentStyle={TT} formatter={(v) => [`${Number(v).toLocaleString()}원`, "종가"]} />
                 <ReferenceLine y={threshold} stroke="#EF4444" strokeDasharray="8 4" />
-                <Line type="monotone" dataKey="close" stroke="#1E3A5F" strokeWidth={2} dot={{ fill: "#1E3A5F", r: 3 }} activeDot={{ r: 5 }} />
+                <Line type="monotone" dataKey="close" stroke="#9B7B2C" strokeWidth={2} dot={{ fill: "#9B7B2C", r: 3 }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -1349,7 +1349,7 @@ function FabricCostDashboard({ config }: { config: AgentConfig }) {
                   <YAxis tick={{ fontSize: 10 }} domain={[0, 'auto']} />
                   <Tooltip contentStyle={TT} />
                   <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Bar dataKey="Yarn" fill="#1E3A5F" radius={[2, 2, 0, 0]} />
+                  <Bar dataKey="Yarn" fill="#9B7B2C" radius={[2, 2, 0, 0]} />
                   <Bar dataKey="Knitting" fill="#3B82F6" radius={[2, 2, 0, 0]} />
                   <Bar dataKey="Dyeing" fill="#EF4444" radius={[2, 2, 0, 0]} />
                 </BarChart>
@@ -1370,7 +1370,7 @@ function FabricCostDashboard({ config }: { config: AgentConfig }) {
                 <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
                 <Tooltip contentStyle={TT} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
-                <Line type="monotone" dataKey="cotton" stroke="#1E3A5F" strokeWidth={2} name="Cotton 30s" dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="cotton" stroke="#9B7B2C" strokeWidth={2} name="Cotton 30s" dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="poly" stroke="#EF4444" strokeWidth={2} name="Polyester" dot={{ r: 3 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -1520,7 +1520,7 @@ function TechPackDashboard({ config }: { config: AgentConfig }) {
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
                 <Tooltip contentStyle={TT} />
                 <Legend wrapperStyle={{ fontSize: 10 }} />
-                <Bar yAxisId="left" dataKey="confidence" fill="#1E3A5F" name="Confidence %" radius={[3, 3, 0, 0]} />
+                <Bar yAxisId="left" dataKey="confidence" fill="#9B7B2C" name="Confidence %" radius={[3, 3, 0, 0]} />
                 <Bar yAxisId="right" dataKey="cost" fill="#EF4444" name="Unit Cost $" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -2133,7 +2133,7 @@ function LogisticsDashboard({ config }: { config: AgentConfig }) {
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip contentStyle={TT} />
                   <Legend wrapperStyle={{ fontSize: 10 }} />
-                  <Bar dataKey="Sea" fill="#1E3A5F" name="Sea Freight" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="Sea" fill="#9B7B2C" name="Sea Freight" radius={[3, 3, 0, 0]} />
                   <Bar dataKey="Air" fill="#EF4444" name="Air Freight" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -2150,7 +2150,7 @@ function LogisticsDashboard({ config }: { config: AgentConfig }) {
                   <XAxis dataKey="day" tick={{ fontSize: 10 }} />
                   <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} unit="%" />
                   <Tooltip contentStyle={TT} />
-                  <Line type="monotone" dataKey="pct" stroke="#1E3A5F" strokeWidth={2} name="Progress" dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="pct" stroke="#9B7B2C" strokeWidth={2} name="Progress" dot={{ r: 3 }} />
                   <ReferenceLine y={ship.progress} stroke="#EF4444" strokeDasharray="3 3" label={{ value: `Current: ${ship.progress}%`, fontSize: 9, fill: "#EF4444" }} />
                 </LineChart>
               </ResponsiveContainer>

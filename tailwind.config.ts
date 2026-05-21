@@ -62,11 +62,11 @@ const config: Config = {
         },
         // Hansae brand colors (direct hex for explicit use)
         hansae: {
-          navy: "#1E3A5F",
-          "navy-light": "#2A4D7A",
-          "navy-dark": "#152C49",
+          navy: "#9B7B2C",
+          "navy-light": "#B38F3A",
+          "navy-dark": "#7D6220",
           red: "#C41E3A",
-          surface: "#F5F6F8",
+          surface: "#F7F6F3",
         },
         teams: {
           purple: "#6264A7",
