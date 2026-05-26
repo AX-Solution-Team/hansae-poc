@@ -11,6 +11,14 @@ import {
   Bot, Play, Store, Hammer, Clock, CheckCircle2,
   XCircle, ArrowRight, Sparkles
 } from "lucide-react"
+import { cn } from "@/lib/utils"
+
+const ROLE_LEVELS: Record<string, number> = {
+  USER: 0,
+  CREATOR: 1,
+  APPROVER: 2,
+  ADMIN: 3,
+}
 
 type DashboardData = {
   publishedCount: number
@@ -35,7 +43,8 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
 const QUICK_LINKS = [
   { href: "/run", label: "실행하기", desc: "채팅으로 Agent 실행", icon: Play, color: "bg-teams-purple text-white" },
   { href: "/marketplace", label: "마켓플레이스", desc: "Agent 검색 및 탐색", icon: Store, color: "bg-hansae-navy text-white" },
-  { href: "/build", label: "빌드", desc: "새 Agent 만들기", icon: Hammer, color: "bg-hansae-red text-white" },
+  { href: "/agents", label: "에이전트 카탈로그", desc: "등록된 Agent 둘러보기", icon: Bot, color: "bg-emerald-600 text-white" },
+  { href: "/build", label: "빌드", desc: "새 Agent 만들기", icon: Hammer, color: "bg-hansae-red text-white", minRole: "CREATOR" },
 ]
 
 export default function HomePage() {
@@ -51,6 +60,9 @@ export default function HomePage() {
 
   if (!user) return null
 
+  const isApproverOrAbove = user.role === "APPROVER" || user.role === "ADMIN"
+  const filteredLinks = QUICK_LINKS.filter((link) => !link.minRole || ROLE_LEVELS[user.role] >= ROLE_LEVELS[link.minRole])
+
   return (
     <>
       <PageHeader
@@ -60,7 +72,7 @@ export default function HomePage() {
       <PageContent>
         <div className="max-w-6xl mx-auto space-y-8">
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={cn("grid grid-cols-1 gap-4", isApproverOrAbove ? "md:grid-cols-3" : "md:grid-cols-2")}>
             <Card className="border-0 shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -77,7 +89,7 @@ export default function HomePage() {
               </CardContent>
             </Card>
 
-            {(user.role === "APPROVER" || user.role === "ADMIN") && (
+            {isApproverOrAbove && (
               <Card className="border-0 shadow-sm">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
@@ -115,8 +127,8 @@ export default function HomePage() {
           {/* Quick links */}
           <div>
             <h2 className="text-sm font-semibold text-gray-500 mb-3">빠른 시작</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {QUICK_LINKS.map((link) => {
+            <div className={cn("grid grid-cols-1 gap-4", filteredLinks.length >= 4 ? "md:grid-cols-4" : "md:grid-cols-3")}>
+              {filteredLinks.map((link) => {
                 const Icon = link.icon
                 return (
                   <Link key={link.href} href={link.href}>

@@ -41,7 +41,13 @@ export async function POST(
       },
     })
 
-    return apiSuccess({ job })
+    return apiSuccess({
+      jobId: job?.id,
+      status: job?.status,
+      summaryMessage: job?.summaryMessage ?? null,
+      steps: (job?.steps ?? []).map((s) => ({ label: s.label, status: s.status })),
+      durationMs: job?.durationMs ?? null,
+    })
   } catch (err) {
     if (err instanceof Error && err.message === 'UNAUTHORIZED') {
       return apiError('UNAUTHORIZED', 'Not authenticated', 401)
