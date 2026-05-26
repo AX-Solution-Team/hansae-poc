@@ -3,11 +3,7 @@ import { cookies } from 'next/headers'
 import { requireAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 import { apiError } from '@/lib/api-response'
-import * as fs from 'fs'
-import * as path from 'path'
 import * as XLSX from 'xlsx'
-
-const STORAGE_DIR = path.join(process.cwd(), 'storage', 'job-files')
 
 export async function GET(
   _request: NextRequest,
@@ -26,32 +22,6 @@ export async function GET(
       return apiError('NOT_FOUND', 'File not found', 404)
     }
 
-    // Strategy 1: Try disk storage
-    const diskPath = path.join(STORAGE_DIR, `${file.jobId}_${file.fileName}.bin`)
-    if (fs.existsSync(diskPath)) {
-      const buffer = fs.readFileSync(diskPath)
-      return new Response(buffer, {
-        headers: {
-          'Content-Type': file.mimeType,
-          'Content-Disposition': `attachment; filename="${encodeURIComponent(file.fileName)}"`,
-          'Content-Length': String(buffer.length),
-        },
-      })
-    }
-
-    // Strategy 2: Try blobPathname directly
-    if (file.blobPathname && fs.existsSync(file.blobPathname)) {
-      const buffer = fs.readFileSync(file.blobPathname)
-      return new Response(buffer, {
-        headers: {
-          'Content-Type': file.mimeType,
-          'Content-Disposition': `attachment; filename="${encodeURIComponent(file.fileName)}"`,
-          'Content-Length': String(buffer.length),
-        },
-      })
-    }
-
-    // Strategy 3: Regenerate xlsx from previewJson
     if (file.previewJson && file.mimeType.includes('spreadsheet')) {
       try {
         const rows = JSON.parse(file.previewJson)
@@ -75,7 +45,7 @@ export async function GET(
       }
     }
 
-    return apiError('NOT_FOUND', 'File content not available', 404)
+    return apiError('NOT_FOUND', 'File content not available (cloud storage not configured for POC)', 404)
   } catch (err) {
     if (err instanceof Error && err.message === 'UNAUTHORIZED') {
       return apiError('UNAUTHORIZED', 'Not authenticated', 401)
